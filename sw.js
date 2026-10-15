@@ -2,7 +2,7 @@
    - Páginas y catalogo.json: primero la red (para que los cambios publicados lleguen al instante).
    - Resto de archivos: caché con actualización en segundo plano.
    Sube el número de CACHE en cada versión nueva. */
-const CACHE = 'epv-v9';
+const CACHE = 'epv-v10';
 const APP = [
   './', './index.html', './consulta.html', './admin.html',
   './estudio.css', './estudio.js', './contenido.js', './logo.png',

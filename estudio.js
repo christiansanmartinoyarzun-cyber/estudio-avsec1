@@ -104,6 +104,7 @@
     { r: 'modulos', ico: '📘', t: 'Módulos' },
     { r: 'practica', ico: '📝', t: 'Práctica' },
     { r: 'puesto', ico: '🛃', t: 'Puesto de control' },
+    { r: 'evaluacion', ico: '🎓', t: 'Evaluación' },
     { r: 'fichas', ico: '🗂️', t: 'Fichas' },
     { r: 'glosario', ico: '🔤', t: 'Glosario' },
     { r: 'fuentes', ico: '📚', t: 'Fuentes', escritorio: true }
@@ -111,7 +112,7 @@
   function dibujarNav(actual) {
     $nav.innerHTML = SECCIONES.map(function (s) {
       return '<a href="#/' + s.r + '"' + (s.r === actual ? ' aria-current="page"' : '') + (s.escritorio ? ' class="solo-escritorio"' : '') + '>' +
-        '<span class="ico" aria-hidden="true">' + s.ico + '</span><span>' + (s.r === 'puesto' ? 'Puesto' : s.t) + '</span></a>';
+        '<span class="ico" aria-hidden="true">' + s.ico + '</span><span>' + (s.r === 'puesto' ? 'Puesto' : s.r === 'evaluacion' ? 'Evaluar' : s.t) + '</span></a>';
     }).join('');
     // etiqueta completa para lectores de pantalla
     var as = $nav.querySelectorAll('a');
@@ -144,6 +145,7 @@
         case 'modulo': vistaModulo(r.arg); break;
         case 'practica': vistaPractica(r.arg); break;
         case 'puesto': vistaPuesto(); break;
+        case 'evaluacion': vistaEvaluacion(); break;
         case 'fichas': vistaFichas(); break;
         case 'glosario': vistaGlosario(); break;
         case 'fuentes': vistaFuentes(); break;
@@ -652,6 +654,175 @@
       '<dt>Cómo se actualiza</dt><dd>Las reglas por elemento viven en <code>catalogo.json</code> y se editan desde el <a href="./admin.html">mantenedor</a>. El estudio las lee de ahí, así que práctica, puesto de control y fichas se actualizan solos.</dd>' +
       '<dt>Alcance</dt><dd>Material formativo de la Escuela Técnica Aeronáutica. No reemplaza la normativa vigente ni el procedimiento del aeropuerto.</dd></dl>' +
       '<div class="fila-btn"><a class="btn" href="./consulta.html">Abrir la consulta rápida</a></div>');
+  }
+
+
+  /* =======================================================
+     EVALUACIÓN
+     Examen de 16 ítems (2 por módulo), sin retroalimentación hasta
+     el final. Genera un código de resultado verificable (integridad,
+     no autenticidad: todo ocurre en el navegador, sin servidor).
+     ======================================================= */
+  var ev = null;
+  var EXIGENCIA = 60;
+  var SAL = 'eaa-v1';
+
+  function hash32(str) {
+    var h = 0x811c9dc5;
+    for (var i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+    return ('00000000' + h.toString(16)).slice(-8);
+  }
+  function aB64(str) {
+    return btoa(unescape(encodeURIComponent(str))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+  function deB64(b) {
+    b = b.replace(/-/g, '+').replace(/_/g, '/');
+    while (b.length % 4) b += '=';
+    return decodeURIComponent(escape(atob(b)));
+  }
+  function crearCodigo(d) {
+    var carga = aB64(JSON.stringify(d));
+    return 'EAA1.' + carga + '.' + hash32(carga + SAL);
+  }
+  function leerCodigo(txt) {
+    var partes = String(txt || '').trim().split('.');
+    if (partes.length !== 3 || partes[0] !== 'EAA1') return null;
+    try {
+      var d = JSON.parse(deB64(partes[1]));
+      return { datos: d, integro: hash32(partes[1] + SAL) === partes[2] };
+    } catch (e) { return null; }
+  }
+  function fechaLarga(iso) {
+    var m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    return m ? m[3] + '-' + m[2] + '-' + m[1] : '—';
+  }
+  function filaModulos(mods) {
+    return '<div class="tabla-caja"><table><thead><tr><th scope="col">Módulo</th><th scope="col">Correctas</th></tr></thead><tbody>' +
+      EAA.MODULOS.map(function (m, i) {
+        var c = mods[m.id] || 0;
+        return '<tr><th scope="row">' + (i + 1) + '. ' + esc(m.titulo) + '</th><td>' + c + ' de 2 ' + (c === 2 ? '✓' : c === 0 ? '✗' : '') + '</td></tr>';
+      }).join('') + '</tbody></table></div>';
+  }
+
+  function vistaEvaluacion() {
+    var p = progreso();
+    var previo = p.eval ? '<p class="lead" style="font-size:1rem">Tu mejor resultado en este navegador: <strong>' + p.eval.pct + '%</strong> (' + fechaLarga(p.eval.fecha) + ').</p>' : '';
+    pintar('<h1>Evaluación</h1><p class="lead">Examen de 16 ítems, dos por módulo, con niveles de Bloom desde recordar hasta analizar.</p>' + previo +
+      '<ul class="texto" style="margin-top:1rem"><li>No verás si acertaste hasta entregar el examen: puedes cambiar tus respuestas antes.</li>' +
+      '<li>La exigencia referencial es de ' + EXIGENCIA + '% de logro.</li>' +
+      '<li>Al final obtienes un desglose por módulo y por nivel de Bloom, y un código de resultado para entregar a tu docente.</li></ul>' +
+      '<div class="calc" style="margin-top:1.2rem"><label for="inNombre">Nombre y apellido</label><input id="inNombre" type="text" autocomplete="name" maxlength="60" placeholder="Ej.: Camila Rojas" style="width:100%;padding:.65rem .8rem;font:inherit;border-radius:10px;border:2px solid var(--borde);background:var(--papel);color:var(--tinta);min-height:2.9rem">' +
+      '<p style="font-size:.9rem;color:var(--suave);margin-top:.5rem">Tu nombre solo se incluye en el código de resultado. No se envía a ningún servidor.</p>' +
+      '<div class="fila-btn"><button type="button" class="btn btn-primario" id="iniciarEv" disabled>Comenzar la evaluación</button></div></div>' +
+      '<h2>Verificar un código de resultado</h2><p class="texto">Para docentes: pega el código que entregó un estudiante para ver su resultado y comprobar que no fue modificado. Verifica la integridad del código, no la identidad de quien lo generó.</p>' +
+      '<div class="calc" style="margin-top:.8rem"><label for="inCodigo">Código de resultado</label><textarea id="inCodigo" rows="3" placeholder="EAA1...." style="width:100%;padding:.65rem .8rem;font:inherit;border-radius:10px;border:2px solid var(--borde);background:var(--papel);color:var(--tinta)"></textarea>' +
+      '<div class="fila-btn"><button type="button" class="btn" id="verifCod">Verificar código</button></div><div id="verifRes" aria-live="polite"></div></div>');
+
+    var inN = document.getElementById('inNombre');
+    var btn = document.getElementById('iniciarEv');
+    inN.addEventListener('input', function () { btn.disabled = inN.value.trim().length < 3; });
+    btn.addEventListener('click', function () { iniciarEvaluacion(inN.value.trim()); });
+    document.getElementById('verifCod').addEventListener('click', function () {
+      var r = leerCodigo(document.getElementById('inCodigo').value);
+      var caja = document.getElementById('verifRes');
+      if (!r) { caja.innerHTML = '<div class="retro mal"><strong>Código no válido.</strong>Revisa que esté completo y empiece con EAA1.</div>'; return; }
+      var d = r.datos, pct = Math.round(d.p / d.t * 100);
+      caja.innerHTML = '<div class="retro ' + (r.integro ? 'bien' : 'mal') + '"><strong>' + (r.integro ? 'Código íntegro.' : 'Código alterado: el contenido no coincide con su verificación.') + '</strong>' +
+        'Estudiante: ' + esc(d.n) + '<br>Fecha: ' + fechaLarga(d.f) + '<br>Resultado: ' + d.p + ' de ' + d.t + ' (' + pct + '%) · ' + (pct >= EXIGENCIA ? 'Logrado' : 'Por lograr') + '</div>' +
+        (d.m ? filaModulos(d.m) : '');
+    });
+  }
+
+  function iniciarEvaluacion(nombre) {
+    var items = [];
+    EAA.MODULOS.forEach(function (m) {
+      var del = EAA.EVALUACION.filter(function (q) { return q.m === m.id; });
+      barajar(del).slice(0, 2).forEach(function (q) {
+        items.push({ m: q.m, b: q.b, q: q.q, r: q.r, ord: barajar(q.o.map(function (t, i) { return { t: t, ok: i === 0 }; })), sel: null });
+      });
+    });
+    ev = { nombre: nombre, items: barajar(items), i: 0 };
+    pintarItemEv();
+  }
+
+  function pintarItemEv() {
+    var it = ev.items[ev.i], n = ev.items.length;
+    var respondidas = ev.items.filter(function (x) { return x.sel !== null; }).length;
+    var ultimo = ev.i === n - 1;
+    pintar('<div class="cabecera-juego"><span>Pregunta ' + (ev.i + 1) + ' de ' + n + '</span><span>Respondidas: ' + respondidas + '</span></div>' +
+      '<div class="barra-prog" aria-hidden="true"><i style="width:' + (ev.i / n * 100) + '%"></i></div>' +
+      '<h1 class="pregunta" style="font-size:1.35rem" id="enunEv">' + esc(it.q) + '</h1>' +
+      '<div class="opciones" role="group" aria-labelledby="enunEv">' +
+      it.ord.map(function (o, i) { return '<button type="button" class="opcion" data-i="' + i + '" aria-pressed="' + (it.sel === i) + '"><span class="letra">' + 'ABCD'[i] + '.</span><span>' + esc(o.t) + '</span></button>'; }).join('') + '</div>' +
+      '<div class="mod-nav"><button type="button" class="btn" id="antEv"' + (ev.i === 0 ? ' disabled' : '') + '>‹ Anterior</button>' +
+      '<button type="button" class="btn btn-primario" id="sigEv">' + (ultimo ? 'Entregar' : 'Siguiente ›') + '</button></div><div id="avisoEv" aria-live="polite"></div>', { sinFoco: true });
+    var h = document.getElementById('enunEv'); h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true });
+    window.scrollTo(0, 0);
+    $main.querySelectorAll('.opcion').forEach(function (b) {
+      b.addEventListener('click', function () {
+        it.sel = +b.getAttribute('data-i');
+        $main.querySelectorAll('.opcion').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+      });
+    });
+    document.getElementById('antEv').addEventListener('click', function () { ev.i--; pintarItemEv(); });
+    document.getElementById('sigEv').addEventListener('click', function () {
+      if (!ultimo) { ev.i++; pintarItemEv(); return; }
+      var sin = ev.items.map(function (x, k) { return x.sel === null ? k + 1 : 0; }).filter(Boolean);
+      if (!sin.length) { entregarEvaluacion(); return; }
+      var av = document.getElementById('avisoEv');
+      av.innerHTML = '<div class="retro mal"><strong>Te faltan ' + sin.length + ' pregunta' + (sin.length > 1 ? 's' : '') + ' sin responder: ' + sin.join(', ') + '.</strong>Las preguntas sin responder cuentan como incorrectas.</div>' +
+        '<div class="fila-btn"><button type="button" class="btn" id="irPend">Ir a la primera pendiente</button><button type="button" class="btn btn-primario" id="igualEv">Entregar igual</button></div>';
+      document.getElementById('irPend').addEventListener('click', function () { ev.i = sin[0] - 1; pintarItemEv(); });
+      document.getElementById('igualEv').addEventListener('click', entregarEvaluacion);
+    });
+  }
+
+  function entregarEvaluacion() {
+    var mods = {}, blooms = {}, correctas = 0;
+    ev.items.forEach(function (it) {
+      var ok = it.sel !== null && it.ord[it.sel].ok;
+      it.acierto = ok;
+      if (ok) correctas++;
+      mods[it.m] = (mods[it.m] || 0) + (ok ? 1 : 0);
+      var b = blooms[it.b] = blooms[it.b] || { c: 0, t: 0 };
+      b.t++; if (ok) b.c++;
+    });
+    var total = ev.items.length, pct = Math.round(correctas / total * 100);
+    var fecha = new Date().toISOString().slice(0, 10);
+    var codigo = crearCodigo({ n: ev.nombre, p: correctas, t: total, f: fecha, m: mods });
+    var q = progreso();
+    if (!q.eval || pct > q.eval.pct) q.eval = { pct: pct, fecha: fecha };
+    salvar(q);
+
+    var logrado = pct >= EXIGENCIA;
+    var orden = ['Recordar', 'Comprender', 'Aplicar', 'Analizar'];
+    var html = '<h1>Resultado de la evaluación</h1>' +
+      '<p class="lead" style="margin-top:.4rem">' + esc(ev.nombre) + ' · ' + fechaLarga(fecha) + '</p>' +
+      '<div class="resultado"><p class="puntaje">' + correctas + ' de ' + total + '</p>' +
+      '<p class="lead" style="margin-top:.4rem">' + pct + '% de logro · <strong>' + (logrado ? 'Logrado' : 'Por lograr') + '</strong> (exigencia referencial ' + EXIGENCIA + '%)</p>' +
+      '<h2>Por módulo</h2>' + filaModulos(mods) +
+      '<h2>Por nivel de Bloom</h2><div class="tabla-caja"><table><thead><tr><th scope="col">Nivel</th><th scope="col">Correctas</th></tr></thead><tbody>' +
+      orden.filter(function (k) { return blooms[k]; }).map(function (k) { return '<tr><th scope="row">' + k + '</th><td>' + blooms[k].c + ' de ' + blooms[k].t + '</td></tr>'; }).join('') + '</tbody></table></div>' +
+      '<h2>Código de resultado</h2><p class="texto">Entrega este código a tu docente. Contiene tu nombre, la fecha y tu puntaje.</p>' +
+      '<div class="calc" style="margin-top:.8rem"><label for="codigoEv">Tu código</label><textarea id="codigoEv" rows="3" readonly style="width:100%;padding:.65rem .8rem;font:.85rem monospace;border-radius:10px;border:2px solid var(--borde);background:var(--papel);color:var(--tinta)">' + esc(codigo) + '</textarea>' +
+      '<div class="fila-btn"><button type="button" class="btn btn-primario" id="copiarCod">Copiar código</button><button type="button" class="btn" id="imprimirEv">Imprimir o guardar PDF</button></div><div id="copiaRes" aria-live="polite" style="margin-top:.5rem;font-weight:700"></div></div>' +
+      '<h2>Revisión de tus respuestas</h2><ol class="repaso" style="padding-left:0">' +
+      ev.items.map(function (it, k) {
+        var ok = it.ord.filter(function (o) { return o.ok; })[0];
+        return '<li><strong>' + (k + 1) + '. ' + esc(it.q) + '</strong><br>' +
+          (it.acierto ? '✓ Correcto: ' + esc(ok.t) : '✗ ' + (it.sel === null ? 'Sin responder' : 'Respondiste: ' + esc(it.ord[it.sel].t)) + '<br>Respuesta correcta: ' + esc(ok.t)) +
+          '<br><em>' + esc(it.r) + '</em> <span style="color:var(--suave)">(' + it.b + ')</span></li>';
+      }).join('') + '</ol>' +
+      '<div class="fila-btn"><button type="button" class="btn" id="otraEv">Volver al inicio de la evaluación</button><a class="btn" href="#/modulos">Repasar los módulos</a></div></div>';
+    pintar(html);
+    document.getElementById('copiarCod').addEventListener('click', function () {
+      var ta = document.getElementById('codigoEv'), msg = document.getElementById('copiaRes');
+      var listo = function () { msg.textContent = 'Código copiado.'; };
+      var respaldo = function () { ta.focus(); ta.select(); try { document.execCommand('copy'); listo(); } catch (e) { msg.textContent = 'Selecciona el código y cópialo con Ctrl+C.'; } };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(ta.value).then(listo, respaldo); else respaldo();
+    });
+    document.getElementById('imprimirEv').addEventListener('click', function () { window.print(); });
+    document.getElementById('otraEv').addEventListener('click', function () { ev = null; vistaEvaluacion(); });
   }
 
   /* ---------- Service worker ---------- */

@@ -324,3 +324,9 @@ html.dark .ficha { border-color: var(--senal); }
 h1:focus:not(:focus-visible), h1[tabindex="-1"]:focus { outline: none; }
 /* Número legible sobre fondos con franjas */
 .rombo .n.cir { background: #fff; color: #141A24 !important; border-radius: 50%; width: 1.9rem; height: 1.9rem; display: grid; place-items: center; font-size: 1.15rem; text-shadow: none; box-shadow: 0 0 0 2px #141A24; }
+
+/* Opción elegida (evaluación, sin mostrar si es correcta) */
+.opciones .opcion[aria-pressed="true"] { border-color: var(--azul-medio); box-shadow: inset 0 0 0 2px var(--azul-medio); background: var(--superficie); }
+html.dark .opciones .opcion[aria-pressed="true"] { border-color: var(--senal); box-shadow: inset 0 0 0 2px var(--senal); }
+@media (max-width: 900px) { .nav a { font-size: .68rem; } }
+@media print { .calc textarea { border: 1px solid #000 !important; background: #fff !important; color: #000 !important; } }
