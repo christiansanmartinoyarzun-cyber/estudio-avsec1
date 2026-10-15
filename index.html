@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Estudio AVSEC · Objetos prohibidos y mercancías peligrosas</title>
+  <meta name="description" content="Sitio de estudio para estudiantes TNS AVSEC: módulos, práctica, puesto de control simulado, fichas y glosario sobre objetos prohibidos y mercancías peligrosas.">
+  <meta name="theme-color" content="#FFC72C">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Estudio AVSEC">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('tema');
+        var oscuro = t === 'oscuro' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (oscuro) document.documentElement.classList.add('dark');
+      } catch (e) {}
+    })();
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./estudio.css">
+</head>
+<body>
+  <a href="#contenido" class="saltar">Saltar al contenido</a>
+
+  <header class="barra">
+    <div class="barra-in">
+      <a href="#/" class="marca" aria-label="Estudio AVSEC, ir al inicio">
+        <img src="./logo.png" alt="" class="logo-dgac" onerror="this.hidden=true">
+        <span class="marca-texto">Estudio AVSEC<small>Escuela Técnica Aeronáutica · DGAC</small></span>
+      </a>
+      <div class="barra-acciones">
+        <a href="./consulta.html" class="btn-barra">Consulta rápida</a>
+        <button id="toggleTema" type="button" class="tema-toggle" role="switch" aria-checked="false" aria-label="Modo oscuro">
+          <span class="tema-pista" aria-hidden="true"><span class="tema-perilla" id="temaPerilla">☀️</span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="marco">
+    <nav class="nav" id="nav" aria-label="Secciones del sitio"></nav>
+    <main id="contenido" tabindex="-1"></main>
+  </div>
+
+  <footer class="pie">
+    <p>Material de estudio referencial basado en el Doc 9284 de la OACI (Tabla 8-1, Ed. 2025–2026 y Adenda 1), el Anexo 17, el Doc 8973 y la normativa DGAC. No reemplaza la normativa vigente ni el procedimiento de tu aeropuerto.</p>
+    <p class="pie-firma">Proyecto DASA - ETA · <a href="./admin.html">⚙️ Mantenedor</a></p>
+  </footer>
+
+  <script src="./contenido.js"></script>
+  <script src="./estudio.js"></script>
+</body>
+</html>
