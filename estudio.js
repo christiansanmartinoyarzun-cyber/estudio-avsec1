@@ -182,9 +182,21 @@
       '<div class="fila-btn">' +
         (siguiente
           ? '<a class="btn btn-primario" href="#/modulo/' + siguiente.id + '">' + (vistos ? 'Continuar: ' : 'Empezar: ') + esc(siguiente.titulo) + '</a>'
-          : '<a class="btn btn-primario" href="#/practica">Rendir el examen integrador</a>') +
-        '<a class="btn" href="#/puesto">Probar el puesto de control</a>' +
+          : '<a class="btn btn-primario" href="#/evaluacion">Rendir la evaluación</a>') +
       '</div>' +
+      '<section class="ruta" aria-labelledby="rutaT"><h2 id="rutaT">Cómo estudiar en este sitio</h2>' +
+      '<p class="texto">El sitio está pensado como un recorrido en tres etapas. Primero aprendes con los módulos, luego refuerzas lo aprendido en las secciones de práctica y, al final, demuestras tu logro en la evaluación.</p>' +
+      '<ol class="pasos">' +
+        '<li><div><h3>Aprende con los módulos</h3><p>Estudia los 8 módulos, idealmente en orden. Cada uno parte con sus objetivos y termina con una síntesis de lo esencial. Márcalo como estudiado al terminar.</p>' +
+          '<p class="ruta-estado">' + vistos + ' de ' + total + ' módulos estudiados · <a href="#/modulos">Ir a los módulos</a></p></div></li>' +
+        '<li><div><h3>Refuerza lo aprendido</h3><p>Usa estas secciones las veces que quieras, en cualquier orden:</p><ul class="ruta-lista">' +
+          '<li><a href="#/practica">Práctica</a>: preguntas por módulo con retroalimentación inmediata.</li>' +
+          '<li><a href="#/puesto">Puesto de control</a>: decide si un objeto viaja en cabina o en bodega.</li>' +
+          '<li><a href="#/fichas">Fichas</a>: memoriza las reglas de cada objeto del catálogo.</li>' +
+          '<li><a href="#/glosario">Glosario</a>: repasa los términos clave en español e inglés.</li></ul></div></li>' +
+        '<li><div><h3>Demuestra tu logro</h3><p>Cuando termines los módulos, rinde la <a href="#/evaluacion">Evaluación</a>: 16 preguntas sin retroalimentación hasta entregar. Al final obtienes un código de resultado para tu docente.</p>' +
+          (p.eval ? '<p class="ruta-estado">Tu mejor resultado: ' + p.eval.pct + '%</p>' : '') + '</div></li>' +
+      '</ol></section>' +
       '<div class="progreso-global" role="group" aria-label="Tu avance">' +
         '<div class="fila"><span>Módulos estudiados</span><span>' + vistos + ' de ' + total + '</span></div>' +
         '<div class="barra-prog" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '"><i style="width:' + pct + '%"></i></div>' +
@@ -368,7 +380,8 @@
   function vistaPractica(arg) {
     var p = progreso();
     if (arg) { iniciarQuiz(arg); return; }
-    var html = '<h1>Práctica</h1><p class="lead">Preguntas con retroalimentación inmediata. Elige un módulo o rinde el examen integrador.</p>' + avisoCatalogo() + '<div class="selector">';
+    var html = '<h1>Práctica</h1><p class="lead">Aquí practicas para aprender: después de cada pregunta ves si acertaste y por qué. Puedes repetir cuantas veces quieras y nada de esto se informa a tu docente.</p>' +
+      '<p class="texto" style="margin-top:.6rem">Elige un módulo para reforzarlo o el examen integrador para mezclar todos. Cuando te sientas preparado, rinde la <a href="#/evaluacion">Evaluación</a>.</p>' + avisoCatalogo() + '<div class="selector">';
     html += '<button type="button" class="opc-modo" data-q="todo"><span class="placa" aria-hidden="true">★</span><span><strong>Examen integrador</strong><small>12 preguntas de todos los módulos, más casos tomados del catálogo.</small></span>' +
       (p.quiz.todo != null ? '<span class="mejor">Mejor: ' + p.quiz.todo + '%</span>' : '') + '</button>';
     EAA.MODULOS.forEach(function (m, i) {
@@ -653,7 +666,7 @@
       '<dt>Anexo 17, Doc 8973, DAR 17 y PNSAC</dt><dd>Marco de seguridad de la aviación. Los elementos AVSEC del catálogo (cortopunzantes, líquidos, etc.) están marcados con origen «avsec» y deben validarse con el área técnica.</dd>' +
       '<dt>Cómo se actualiza</dt><dd>Las reglas por elemento viven en <code>catalogo.json</code> y se editan desde el <a href="./admin.html">mantenedor</a>. El estudio las lee de ahí, así que práctica, puesto de control y fichas se actualizan solos.</dd>' +
       '<dt>Alcance</dt><dd>Material formativo de la Escuela Técnica Aeronáutica. No reemplaza la normativa vigente ni el procedimiento del aeropuerto.</dd></dl>' +
-      '<div class="fila-btn"><a class="btn" href="./consulta.html">Abrir la consulta rápida</a></div>');
+      '<div class="fila-btn"><a class="btn btn-primario" href="#/">Volver al inicio</a><a class="btn" href="./consulta.html">Abrir la consulta rápida</a></div>');
   }
 
 
@@ -707,7 +720,18 @@
   function vistaEvaluacion() {
     var p = progreso();
     var previo = p.eval ? '<p class="lead" style="font-size:1rem">Tu mejor resultado en este navegador: <strong>' + p.eval.pct + '%</strong> (' + fechaLarga(p.eval.fecha) + ').</p>' : '';
-    pintar('<h1>Evaluación</h1><p class="lead">Examen de 16 ítems, dos por módulo, con niveles de Bloom desde recordar hasta analizar.</p>' + previo +
+    var faltan = EAA.MODULOS.filter(function (m) { return !p.vistos[m.id]; }).length;
+    var avisoFaltan = faltan ? '<aside class="callout alerta"><h3>Te ' + (faltan === 1 ? 'falta 1 módulo' : 'faltan ' + faltan + ' módulos') + ' por estudiar</h3><p>Puedes rendir la evaluación igual, pero te recomendamos terminar los <a href="#/modulos">módulos</a> y reforzar en la <a href="#/practica">Práctica</a> antes.</p></aside>' : '';
+    pintar('<h1>Evaluación</h1><p class="lead">Es la evaluación de cierre del recorrido: 16 ítems, dos por módulo, con niveles de Bloom desde recordar hasta analizar.</p>' + previo + avisoFaltan +
+      '<h2>¿En qué se diferencia de la Práctica?</h2>' +
+      '<div class="tabla-caja"><table><thead><tr><th scope="col"></th><th scope="col">Práctica</th><th scope="col">Evaluación</th></tr></thead><tbody>' +
+      '<tr><th scope="row">Propósito</th><td>Formativo: aprender y reforzar.</td><td>Sumativo: demostrar el logro al cerrar el recorrido.</td></tr>' +
+      '<tr><th scope="row">Retroalimentación</th><td>Inmediata, después de cada pregunta.</td><td>Al entregar, con la revisión completa.</td></tr>' +
+      '<tr><th scope="row">Preguntas</th><td>Banco de práctica, por módulo o mezcladas.</td><td>Banco distinto: 2 ítems al azar por módulo.</td></tr>' +
+      '<tr><th scope="row">Resultado</th><td>Solo para ti.</td><td>Código de resultado para entregar a tu docente.</td></tr>' +
+      '</tbody></table></div>' +
+      '<p class="texto" style="margin-top:.8rem;font-size:.95rem;color:var(--suave)">Tu docente puede usar el código como evidencia de logro dentro de la asignatura. Esta evaluación no reemplaza las evaluaciones oficiales del programa TNS AVSEC.</p>' +
+      '<h2>Antes de comenzar</h2>' +
       '<ul class="texto" style="margin-top:1rem"><li>No verás si acertaste hasta entregar el examen: puedes cambiar tus respuestas antes.</li>' +
       '<li>La exigencia referencial es de ' + EXIGENCIA + '% de logro.</li>' +
       '<li>Al final obtienes un desglose por módulo y por nivel de Bloom, y un código de resultado para entregar a tu docente.</li></ul>' +
