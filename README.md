@@ -15,7 +15,7 @@ pasajeros (bilingüe) sigue disponible en `consulta.html`.
 | Archivo | Función |
 |---|---|
 | index.html / estudio.js / estudio.css | Sitio de estudio: módulos, práctica, puesto de control, fichas, glosario, avance guardado en el navegador |
-| contenido.js | Texto de los 8 módulos, banco de 36 preguntas de práctica y 24 ítems de evaluación (niveles de Bloom), 9 clases y glosario (editar aquí para cambiar el material didáctico) |
+| contenido.js | Texto de los 8 módulos, banco de 36 preguntas de práctica y 24 ítems de evaluación (niveles de Bloom; cada prueba usa 20, de 2 puntos, exigencia 60 %, nota 1,0–7,0), 9 clases y glosario (editar aquí para cambiar el material didáctico) |
 | consulta.html / script.js | Consulta rápida para pasajeros: búsqueda, 9 categorías, 4 filtros del proyecto, ES/EN, tema claro/oscuro |
 | admin.html / admin.js | Mantenedor: crear, editar, eliminar, importar/exportar JSON, vista previa |
 | data.js | Categorías, catálogo semilla bilingüe (48 elementos), validación y carga |

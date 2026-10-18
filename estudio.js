@@ -213,7 +213,7 @@
     if (n === 2) { var f = Object.keys(p.fichas).filter(function (k) { return p.fichas[k]; }).length; return f + ' fichas dominadas'; }
     if (n === 3) { var q = Object.keys(p.quiz).map(function (k) { return p.quiz[k]; }); return q.length ? 'Mejor puntaje: ' + Math.max.apply(null, q) + '%' : 'Aún sin práctica'; }
     if (n === 4) return p.puesto.jugadas ? 'Mejor partida: ' + p.puesto.mejor + ' de 20 puntos' : 'Aún sin partidas';
-    return p.eval ? 'Mejor resultado: ' + p.eval.pct + '%' : 'Pendiente';
+    return p.eval ? 'Mejor resultado: ' + (p.eval.nota ? 'nota ' + p.eval.nota : p.eval.pct + '%') : 'Pendiente';
   }
   function rutaInicio(p, vistos, total) {
     return '<section class="ruta" aria-labelledby="rutaT"><h2 id="rutaT">Cómo estudiar en este sitio</h2>' +
@@ -718,12 +718,22 @@
 
   /* =======================================================
      EVALUACIÓN
-     Examen de 16 ítems (2 por módulo), sin retroalimentación hasta
-     el final. Genera un código de resultado verificable (integridad,
+     Prueba de 20 preguntas (2 a 3 por módulo), 2 puntos cada una,
+     40 puntos en total. Exigencia 60 % (24 puntos = nota 4,0), escala
+     de 1,0 a 7,0. Sin retroalimentación hasta el final. Genera un código de resultado verificable (integridad,
      no autenticidad: todo ocurre en el navegador, sin servidor).
      ======================================================= */
   var ev = null;
-  var EXIGENCIA = 60;
+  var EXIGENCIA = 60;      /* % de exigencia para la nota 4,0 */
+  var N_PREG = 20;         /* preguntas por prueba */
+  var PTS_PREG = 2;        /* puntos por pregunta */
+  var PTS_MAX = N_PREG * PTS_PREG;
+  /* Escala chilena 1,0–7,0: bajo la exigencia sube de 1,0 a 4,0; sobre ella, de 4,0 a 7,0. */
+  function calcNota(correctas, total) {
+    var max = total * PTS_PREG, pts = correctas * PTS_PREG, umbral = max * EXIGENCIA / 100;
+    var n = pts >= umbral ? 4 + 3 * (pts - umbral) / (max - umbral) : 1 + 3 * pts / umbral;
+    return { pts: pts, max: max, umbral: umbral, nota: (Math.round(n * 10) / 10).toFixed(1).replace('.', ','), aprobado: pts >= umbral };
+  }
   var SAL = 'eaa-v1';
 
   function hash32(str) {
@@ -758,14 +768,14 @@
   function filaModulos(mods) {
     return '<div class="tabla-caja"><table><thead><tr><th scope="col">Módulo</th><th scope="col">Correctas</th></tr></thead><tbody>' +
       EAA.MODULOS.map(function (m, i) {
-        var c = mods[m.id] || 0;
-        return '<tr><th scope="row">' + (i + 1) + '. ' + esc(m.titulo) + '</th><td>' + c + ' de 2 ' + (c === 2 ? '✓' : c === 0 ? '✗' : '') + '</td></tr>';
+        var v = mods[m.id], c = Array.isArray(v) ? v[0] : (v || 0), t = Array.isArray(v) ? v[1] : 2;
+        return '<tr><th scope="row">' + (i + 1) + '. ' + esc(m.titulo) + '</th><td>' + c + ' de ' + t + ' ' + (c === t ? '✓' : c === 0 ? '✗' : '') + '</td></tr>';
       }).join('') + '</tbody></table></div>';
   }
 
   function vistaEvaluacion() {
     var p = progreso();
-    var previo = p.eval ? '<p class="lead" style="font-size:1rem">Tu mejor resultado en este navegador: <strong>' + p.eval.pct + '%</strong> (' + fechaLarga(p.eval.fecha) + ').</p>' : '';
+    var previo = p.eval ? '<p class="lead" style="font-size:1rem">Tu mejor resultado en este navegador: <strong>' + (p.eval.nota ? 'nota ' + p.eval.nota + ' (' + p.eval.pct + '%)' : p.eval.pct + '%') + '</strong> (' + fechaLarga(p.eval.fecha) + ').</p>' : '';
     var faltan = EAA.MODULOS.filter(function (m) { return !p.vistos[m.id]; }).length;
     var avisoFaltan = faltan ? '<aside class="callout alerta"><h3>Te ' + (faltan === 1 ? 'falta 1 módulo' : 'faltan ' + faltan + ' módulos') + ' por estudiar</h3><p>Puedes rendir la evaluación igual, pero te recomendamos terminar los <a href="#/modulos">módulos</a> y reforzar en la <a href="#/practica">Práctica</a> antes.</p></aside>' : '';
     pintar('<h1>Evaluación final</h1>' + guiaSeccion('evaluacion') + previo + avisoFaltan +
@@ -773,13 +783,14 @@
       '<div class="tabla-caja"><table><thead><tr><th scope="col"></th><th scope="col">Práctica</th><th scope="col">Evaluación</th></tr></thead><tbody>' +
       '<tr><th scope="row">Propósito</th><td>Formativo: aprender y reforzar.</td><td>Sumativo: demostrar el logro al cerrar el recorrido.</td></tr>' +
       '<tr><th scope="row">Retroalimentación</th><td>Inmediata, después de cada pregunta.</td><td>Al entregar, con la revisión completa.</td></tr>' +
-      '<tr><th scope="row">Preguntas</th><td>Banco de práctica, por módulo o mezcladas.</td><td>Banco distinto: 2 ítems al azar por módulo.</td></tr>' +
-      '<tr><th scope="row">Resultado</th><td>Solo para ti.</td><td>Código de resultado para entregar a tu docente.</td></tr>' +
+      '<tr><th scope="row">Preguntas</th><td>Banco de práctica, por módulo o mezcladas.</td><td>Banco distinto: 20 preguntas, de 2 a 3 por módulo, al azar.</td></tr>' +
+      '<tr><th scope="row">Resultado</th><td>Solo para ti.</td><td>Nota de 1,0 a 7,0 y código de resultado para tu docente.</td></tr>' +
       '</tbody></table></div>' +
       '<p class="texto" style="margin-top:.8rem;font-size:.95rem;color:var(--suave)">Tu docente puede usar el código como evidencia de logro dentro de la asignatura. Esta evaluación no reemplaza las evaluaciones oficiales del programa TNS AVSEC.</p>' +
       '<h2>Antes de comenzar</h2>' +
       '<ul class="texto" style="margin-top:1rem"><li>No verás si acertaste hasta entregar el examen: puedes cambiar tus respuestas antes.</li>' +
-      '<li>La exigencia referencial es de ' + EXIGENCIA + '% de logro.</li>' +
+      '<li>La prueba tiene ' + N_PREG + ' preguntas de ' + PTS_PREG + ' puntos cada una (' + PTS_MAX + ' puntos en total).</li>' +
+      '<li>La exigencia es de ' + EXIGENCIA + '%: con ' + (PTS_MAX * EXIGENCIA / 100) + ' puntos (' + (N_PREG * EXIGENCIA / 100) + ' respuestas correctas) obtienes la nota 4,0. La escala va de 1,0 a 7,0.</li>' +
       '<li>Al entregar, recibes en tu correo tu calificación y la retroalimentación de cada pregunta, con copia a tu docente.</li></ul>' +
       '<div class="calc" style="margin-top:1.2rem">' +
         '<label for="inNombre">Nombre y apellido</label><input id="inNombre" type="text" autocomplete="name" maxlength="60" placeholder="Ej.: Camila Rojas" style="width:100%;padding:.65rem .8rem;font:inherit;border-radius:10px;border:2px solid var(--borde);background:var(--papel);color:var(--tinta);min-height:2.9rem">' +
@@ -804,20 +815,24 @@
       var r = leerCodigo(document.getElementById('inCodigo').value);
       var caja = document.getElementById('verifRes');
       if (!r) { caja.innerHTML = '<div class="retro mal"><strong>Código no válido.</strong>Revisa que esté completo y empiece con EAA1.</div>'; return; }
-      var d = r.datos, pct = Math.round(d.p / d.t * 100);
+      var d = r.datos, pct = Math.round(d.p / d.t * 100), nt = calcNota(d.p, d.t);
       caja.innerHTML = '<div class="retro ' + (r.integro ? 'bien' : 'mal') + '"><strong>' + (r.integro ? 'Código íntegro.' : 'Código alterado: el contenido no coincide con su verificación.') + '</strong>' +
-        'Estudiante: ' + esc(d.n) + '<br>Fecha: ' + fechaLarga(d.f) + '<br>Resultado: ' + d.p + ' de ' + d.t + ' (' + pct + '%) · ' + (pct >= EXIGENCIA ? 'Logrado' : 'Por lograr') + '</div>' +
+        'Estudiante: ' + esc(d.n) + '<br>Fecha: ' + fechaLarga(d.f) + '<br>Resultado: ' + d.p + ' de ' + d.t + ' correctas (' + nt.pts + ' de ' + nt.max + ' puntos, ' + pct + '%)<br><strong>Nota ' + nt.nota + ' · ' + (nt.aprobado ? 'Aprobado' : 'Reprobado') + '</strong></div>' +
         (d.m ? filaModulos(d.m) : '');
     });
   }
 
   function iniciarEvaluacion(nombre, correo, seccion) {
-    var items = [];
+    /* 2 preguntas por módulo y 4 más (de módulos distintos) hasta completar N_PREG */
+    var elegidas = [], resto = [];
     EAA.MODULOS.forEach(function (m) {
-      var del = EAA.EVALUACION.filter(function (q) { return q.m === m.id; });
-      barajar(del).slice(0, 2).forEach(function (q) {
-        items.push({ m: q.m, b: q.b, q: q.q, r: q.r, ord: barajar(q.o.map(function (t, i) { return { t: t, ok: i === 0 }; })), sel: null });
-      });
+      var del = barajar(EAA.EVALUACION.filter(function (q) { return q.m === m.id; }));
+      elegidas = elegidas.concat(del.slice(0, 2));
+      resto = resto.concat(del.slice(2));
+    });
+    elegidas = elegidas.concat(barajar(resto).slice(0, N_PREG - elegidas.length));
+    var items = elegidas.map(function (q) {
+      return { m: q.m, b: q.b, q: q.q, r: q.r, ord: barajar(q.o.map(function (t, i) { return { t: t, ok: i === 0 }; })), sel: null };
     });
     ev = { nombre: nombre, correo: correo || '', seccion: seccion || '', items: barajar(items), i: 0 };
     pintarItemEv();
@@ -861,24 +876,27 @@
       var ok = it.sel !== null && it.ord[it.sel].ok;
       it.acierto = ok;
       if (ok) correctas++;
-      mods[it.m] = (mods[it.m] || 0) + (ok ? 1 : 0);
+      var mm = mods[it.m] = mods[it.m] || [0, 0];
+      mm[1]++; if (ok) mm[0]++;
       var b = blooms[it.b] = blooms[it.b] || { c: 0, t: 0 };
       b.t++; if (ok) b.c++;
     });
     var total = ev.items.length, pct = Math.round(correctas / total * 100);
+    var nt = calcNota(correctas, total);
     var hoy = new Date(), dos = function (n) { return (n < 10 ? '0' : '') + n; };
     var fecha = hoy.getFullYear() + '-' + dos(hoy.getMonth() + 1) + '-' + dos(hoy.getDate());
     var codigo = crearCodigo({ n: ev.nombre, p: correctas, t: total, f: fecha, m: mods });
     var q = progreso();
-    if (!q.eval || pct > q.eval.pct) q.eval = { pct: pct, fecha: fecha };
+    if (!q.eval || pct > q.eval.pct) q.eval = { pct: pct, nota: nt.nota, fecha: fecha };
     salvar(q);
 
-    var logrado = pct >= EXIGENCIA;
+    var logrado = nt.aprobado;
     var orden = ['Recordar', 'Comprender', 'Aplicar', 'Analizar'];
     var html = '<h1>Resultado de la evaluación</h1>' +
       '<p class="lead" style="margin-top:.4rem">' + esc(ev.nombre) + ' · ' + fechaLarga(fecha) + '</p>' +
-      '<div class="resultado"><p class="puntaje">' + correctas + ' de ' + total + '</p>' +
-      '<p class="lead" style="margin-top:.4rem">' + pct + '% de logro · <strong>' + (logrado ? 'Logrado' : 'Por lograr') + '</strong> (exigencia referencial ' + EXIGENCIA + '%)</p>' +
+      '<div class="resultado"><p class="puntaje">Nota ' + nt.nota + '</p>' +
+      '<p class="lead" style="margin-top:.4rem"><strong>' + (logrado ? 'Aprobado' : 'Reprobado') + '</strong> · ' + nt.pts + ' de ' + nt.max + ' puntos (' + correctas + ' de ' + total + ' correctas, ' + pct + '%)</p>' +
+      '<p class="texto" style="font-size:.95rem;color:var(--suave)">Cada pregunta vale ' + PTS_PREG + ' puntos. Exigencia ' + EXIGENCIA + '%: ' + nt.umbral + ' puntos equivalen a la nota 4,0. Escala de 1,0 a 7,0.</p>' +
       '<h2>Por módulo</h2>' + filaModulos(mods) +
       '<h2>Por nivel de Bloom</h2><div class="tabla-caja"><table><thead><tr><th scope="col">Nivel</th><th scope="col">Correctas</th></tr></thead><tbody>' +
       orden.filter(function (k) { return blooms[k]; }).map(function (k) { return '<tr><th scope="row">' + k + '</th><td>' + blooms[k].c + ' de ' + blooms[k].t + '</td></tr>'; }).join('') + '</tbody></table></div>' +
@@ -903,7 +921,7 @@
     });
     document.getElementById('imprimirEv').addEventListener('click', function () { window.print(); });
     document.getElementById('otraEv').addEventListener('click', function () { ev = null; vistaEvaluacion(); });
-    enviarResultado({ fecha: fecha, correctas: correctas, total: total, pct: pct, logrado: logrado, mods: mods, blooms: blooms, orden: orden, codigo: codigo });
+    enviarResultado({ fecha: fecha, correctas: correctas, total: total, pct: pct, nt: nt, logrado: logrado, mods: mods, blooms: blooms, orden: orden, codigo: codigo });
   }
 
   /* Envío al flujo de Pabbly Connect (webhook): fila en la planilla del docente + correo al estudiante con copia al docente. */
@@ -911,8 +929,9 @@
   var CORREO_DOCENTE = 'christian.sanmartin.oyarzun@gmail.com';
   function enviarResultado(r) {
     var h = function (t) { return esc(t); };
-    var nivel = r.logrado ? 'Logrado' : 'Por lograr';
-    var porModulo = EAA.MODULOS.map(function (m, i) { return (i + 1) + '. ' + m.titulo + ': ' + (r.mods[m.id] || 0) + ' de 2'; });
+    var nt = r.nt, nivel = r.logrado ? 'Aprobado' : 'Reprobado';
+    var mv = function (m) { var v = r.mods[m.id] || [0, 0]; return v[0] + ' de ' + v[1]; };
+    var porModulo = EAA.MODULOS.map(function (m, i) { return (i + 1) + '. ' + m.titulo + ': ' + mv(m); });
     var porBloom = r.orden.filter(function (k) { return r.blooms[k]; }).map(function (k) { return k + ': ' + r.blooms[k].c + ' de ' + r.blooms[k].t; });
     var retro = ev.items.map(function (it, k) {
       var ok = it.ord.filter(function (o) { return o.ok; })[0];
@@ -924,10 +943,11 @@
       '<h2 style="color:#0A2A5C;margin:0 0 4px">Resultado de la evaluación AVSEC</h2>' +
       '<p style="margin:0 0 16px;color:#4B5563">Objetos prohibidos y mercancías peligrosas · Escuela Técnica Aeronáutica (DGAC)</p>' +
       '<p style="margin:0 0 4px"><strong>' + h(ev.nombre) + '</strong>' + (ev.seccion ? ' · ' + h(ev.seccion) : '') + ' · ' + fechaLarga(r.fecha) + '</p>' +
-      '<p style="font-size:22px;margin:8px 0;color:#0A2A5C"><strong>' + r.correctas + ' de ' + r.total + ' (' + r.pct + '%) · ' + nivel + '</strong></p>' +
-      '<p style="margin:0 0 16px;color:#4B5563">Exigencia referencial: ' + EXIGENCIA + '% de logro.</p>' +
+      '<p style="font-size:26px;margin:8px 0;color:#0A2A5C"><strong>Nota ' + nt.nota + ' · ' + nivel + '</strong></p>' +
+      '<p style="margin:0 0 4px;font-size:16px"><strong>' + nt.pts + ' de ' + nt.max + ' puntos</strong> · ' + r.correctas + ' de ' + r.total + ' respuestas correctas (' + r.pct + '%)</p>' +
+      '<p style="margin:0 0 16px;color:#4B5563">Cada pregunta vale ' + PTS_PREG + ' puntos. Exigencia ' + EXIGENCIA + '%: ' + nt.umbral + ' puntos equivalen a la nota 4,0. Escala de 1,0 a 7,0.</p>' +
       '<h3 style="color:#0A2A5C;margin:16px 0 6px">Por módulo</h3><table style="border-collapse:collapse">' +
-      EAA.MODULOS.map(function (m, i) { return '<tr><td ' + td + '>' + (i + 1) + '. ' + h(m.titulo) + '</td><td ' + td + '>' + (r.mods[m.id] || 0) + ' de 2</td></tr>'; }).join('') + '</table>' +
+      EAA.MODULOS.map(function (m, i) { return '<tr><td ' + td + '>' + (i + 1) + '. ' + h(m.titulo) + '</td><td ' + td + '>' + mv(m) + '</td></tr>'; }).join('') + '</table>' +
       '<h3 style="color:#0A2A5C;margin:16px 0 6px">Por nivel de Bloom</h3><table style="border-collapse:collapse">' +
       r.orden.filter(function (k) { return r.blooms[k]; }).map(function (k) { return '<tr><td ' + td + '>' + k + '</td><td ' + td + '>' + r.blooms[k].c + ' de ' + r.blooms[k].t + '</td></tr>'; }).join('') + '</table>' +
       '<h3 style="color:#0A2A5C;margin:16px 0 6px">Retroalimentación por pregunta</h3>' +
@@ -944,8 +964,9 @@
       fecha: r.fecha, nombre: ev.nombre, correo: ev.correo, seccion: ev.seccion || '—',
       correctas: String(r.correctas), total: String(r.total), porcentaje: r.pct + '%', nivel: nivel,
       por_modulo: porModulo.join(' | '), por_bloom: porBloom.join(' | '), retroalimentacion: retroTexto,
+      puntaje: nt.pts + ' de ' + nt.max, nota: nt.nota, exigencia: EXIGENCIA + '%',
       codigo: r.codigo, correo_docente: CORREO_DOCENTE,
-      asunto: 'Resultado evaluación AVSEC: ' + r.correctas + ' de ' + r.total + ' (' + r.pct + '%) · ' + ev.nombre,
+      asunto: 'Resultado evaluación AVSEC: nota ' + nt.nota + ' (' + nt.pts + ' de ' + nt.max + ' puntos) · ' + ev.nombre,
       cuerpo_html: cuerpo
     };
     var estado = document.getElementById('envioEstado');

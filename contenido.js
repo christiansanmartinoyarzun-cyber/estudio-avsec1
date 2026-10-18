@@ -398,7 +398,7 @@ EAA.GLOSARIO = [
 
 /* ---------- Banco de evaluación ----------
    Ítems distintos de los de práctica. b: nivel de Bloom (revisado).
-   El examen toma 2 ítems al azar por módulo (16 en total).
+   La prueba toma 20 ítems al azar: 2 por módulo y 4 más de módulos distintos (2 puntos cada uno, 40 en total).
    La primera opción de cada ítem es la correcta; el orden se baraja al rendir. */
 EAA.EVALUACION = [
   /* m1 */
@@ -450,7 +450,7 @@ EAA.ETAPAS = [
   { n: 4, verbo: 'Aplicar en situación', titulo: 'Decidir como en el punto de control', secciones: ['puesto'], bloom: 'Aplicar y analizar', tiempo: '5 min por partida de 10 objetos',
     resumen: 'Frente a un objeto al azar, decides sin pistas su estado en cabina y en bodega. Integras varios módulos a la vez, como ocurre en el trabajo real.' },
   { n: 5, verbo: 'Demostrar', titulo: 'Demostrar el logro en la evaluación final', secciones: ['evaluacion'], bloom: 'Todos los niveles, de recordar a analizar', tiempo: 'Unos 20 min sin interrupciones',
-    resumen: 'Rindes la evaluación sumativa: 16 ítems sin retroalimentación hasta entregar. Obtienes tu desglose por módulo y por nivel de Bloom, y un código de resultado para tu docente.' }
+    resumen: 'Rindes la evaluación sumativa: 20 preguntas de 2 puntos, sin retroalimentación hasta entregar. Obtienes tu nota de 1,0 a 7,0 (exigencia 60 %), tu desglose por módulo y por nivel de Bloom, y un código de resultado para tu docente.' }
 ];
 
 /* Guía detallada de cada sección: para qué sirve, qué harás, cómo aprovecharla y qué lograrás. */
@@ -536,9 +536,9 @@ EAA.GUIA = {
     nombre: 'Evaluación', etapa: 5,
     para: 'Es la evaluación sumativa final del recorrido. Demuestra lo que lograste en las etapas anteriores con preguntas nuevas que no aparecen en la práctica, y entrega a tu docente un código de resultado como evidencia de logro.',
     haras: [
-      'Responder 16 ítems: 2 por módulo, tomados al azar de un banco propio con niveles de Bloom de recordar a analizar.',
+      'Responder 20 preguntas de 2 puntos cada una (40 puntos), de 2 a 3 por módulo, tomadas al azar de un banco propio con niveles de Bloom de recordar a analizar.',
       'Avanzar y retroceder libremente, cambiando respuestas antes de entregar.',
-      'Recibir al entregar tu puntaje, tu nivel de logro, el desglose por módulo y por nivel de Bloom y la revisión de cada respuesta.',
+      'Recibir al entregar tu nota (escala de 1,0 a 7,0 con 60 % de exigencia: 24 puntos son un 4,0), tu puntaje, el desglose por módulo y por nivel de Bloom y la revisión de cada respuesta.',
       'Obtener un código de resultado para copiar o imprimir en PDF.'
     ],
     como: [
