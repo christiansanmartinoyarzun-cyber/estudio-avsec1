@@ -780,18 +780,26 @@
       '<h2>Antes de comenzar</h2>' +
       '<ul class="texto" style="margin-top:1rem"><li>No verás si acertaste hasta entregar el examen: puedes cambiar tus respuestas antes.</li>' +
       '<li>La exigencia referencial es de ' + EXIGENCIA + '% de logro.</li>' +
-      '<li>Al final obtienes un desglose por módulo y por nivel de Bloom, y un código de resultado para entregar a tu docente.</li></ul>' +
-      '<div class="calc" style="margin-top:1.2rem"><label for="inNombre">Nombre y apellido</label><input id="inNombre" type="text" autocomplete="name" maxlength="60" placeholder="Ej.: Camila Rojas" style="width:100%;padding:.65rem .8rem;font:inherit;border-radius:10px;border:2px solid var(--borde);background:var(--papel);color:var(--tinta);min-height:2.9rem">' +
-      '<p style="font-size:.9rem;color:var(--suave);margin-top:.5rem">Tu nombre solo se incluye en el código de resultado. No se envía a ningún servidor.</p>' +
+      '<li>Al entregar, recibes en tu correo tu calificación y la retroalimentación de cada pregunta, con copia a tu docente.</li></ul>' +
+      '<div class="calc" style="margin-top:1.2rem">' +
+        '<label for="inNombre">Nombre y apellido</label><input id="inNombre" type="text" autocomplete="name" maxlength="60" placeholder="Ej.: Camila Rojas" style="width:100%;padding:.65rem .8rem;font:inherit;border-radius:10px;border:2px solid var(--borde);background:var(--papel);color:var(--tinta);min-height:2.9rem">' +
+        '<label for="inCorreo" style="margin-top:.9rem">Correo electrónico</label><input id="inCorreo" type="email" autocomplete="email" inputmode="email" maxlength="80" placeholder="Ej.: camila.rojas@correo.cl" style="width:100%;padding:.65rem .8rem;font:inherit;border-radius:10px;border:2px solid var(--borde);background:var(--papel);color:var(--tinta);min-height:2.9rem">' +
+        '<p id="errCorreo" style="font-size:.9rem;color:var(--no);margin-top:.35rem" hidden>Revisa el correo: debe tener el formato nombre@dominio.cl.</p>' +
+        '<label for="inSeccion" style="margin-top:.9rem">Sección o curso <span style="font-weight:400;color:var(--suave)">(opcional)</span></label><input id="inSeccion" type="text" maxlength="40" placeholder="Ej.: TNS AVSEC 2026 · Sección A" style="width:100%;padding:.65rem .8rem;font:inherit;border-radius:10px;border:2px solid var(--borde);background:var(--papel);color:var(--tinta);min-height:2.9rem">' +
+        '<p style="font-size:.9rem;color:var(--suave);margin-top:.7rem">Al entregar la evaluación, tu nombre, correo, sección, respuestas y resultado se envían a tu correo y al de tu docente, y quedan en su registro de resultados.</p>' +
       '<div class="fila-btn"><button type="button" class="btn btn-primario" id="iniciarEv" disabled>Comenzar la evaluación</button></div></div>' +
       '<h2>Verificar un código de resultado</h2><p class="texto">Para docentes: pega el código que entregó un estudiante para ver su resultado y comprobar que no fue modificado. Verifica la integridad del código, no la identidad de quien lo generó.</p>' +
       '<div class="calc" style="margin-top:.8rem"><label for="inCodigo">Código de resultado</label><textarea id="inCodigo" rows="3" placeholder="EAA1...." style="width:100%;padding:.65rem .8rem;font:inherit;border-radius:10px;border:2px solid var(--borde);background:var(--papel);color:var(--tinta)"></textarea>' +
       '<div class="fila-btn"><button type="button" class="btn" id="verifCod">Verificar código</button></div><div id="verifRes" aria-live="polite"></div></div>');
 
-    var inN = document.getElementById('inNombre');
-    var btn = document.getElementById('iniciarEv');
-    inN.addEventListener('input', function () { btn.disabled = inN.value.trim().length < 3; });
-    btn.addEventListener('click', function () { iniciarEvaluacion(inN.value.trim()); });
+    var inN = document.getElementById('inNombre'), inC = document.getElementById('inCorreo'), inS = document.getElementById('inSeccion');
+    var btn = document.getElementById('iniciarEv'), errC = document.getElementById('errCorreo');
+    var correoOk = function () { return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(inC.value.trim()); };
+    var revisar = function () { btn.disabled = inN.value.trim().length < 3 || !correoOk(); };
+    inN.addEventListener('input', revisar);
+    inC.addEventListener('input', function () { errC.hidden = true; revisar(); });
+    inC.addEventListener('blur', function () { errC.hidden = !inC.value.trim() || correoOk(); });
+    btn.addEventListener('click', function () { iniciarEvaluacion(inN.value.trim(), inC.value.trim().toLowerCase(), inS.value.trim()); });
     document.getElementById('verifCod').addEventListener('click', function () {
       var r = leerCodigo(document.getElementById('inCodigo').value);
       var caja = document.getElementById('verifRes');
@@ -803,7 +811,7 @@
     });
   }
 
-  function iniciarEvaluacion(nombre) {
+  function iniciarEvaluacion(nombre, correo, seccion) {
     var items = [];
     EAA.MODULOS.forEach(function (m) {
       var del = EAA.EVALUACION.filter(function (q) { return q.m === m.id; });
@@ -811,7 +819,7 @@
         items.push({ m: q.m, b: q.b, q: q.q, r: q.r, ord: barajar(q.o.map(function (t, i) { return { t: t, ok: i === 0 }; })), sel: null });
       });
     });
-    ev = { nombre: nombre, items: barajar(items), i: 0 };
+    ev = { nombre: nombre, correo: correo || '', seccion: seccion || '', items: barajar(items), i: 0 };
     pintarItemEv();
   }
 
@@ -858,7 +866,8 @@
       b.t++; if (ok) b.c++;
     });
     var total = ev.items.length, pct = Math.round(correctas / total * 100);
-    var fecha = new Date().toISOString().slice(0, 10);
+    var hoy = new Date(), dos = function (n) { return (n < 10 ? '0' : '') + n; };
+    var fecha = hoy.getFullYear() + '-' + dos(hoy.getMonth() + 1) + '-' + dos(hoy.getDate());
     var codigo = crearCodigo({ n: ev.nombre, p: correctas, t: total, f: fecha, m: mods });
     var q = progreso();
     if (!q.eval || pct > q.eval.pct) q.eval = { pct: pct, fecha: fecha };
@@ -873,7 +882,8 @@
       '<h2>Por módulo</h2>' + filaModulos(mods) +
       '<h2>Por nivel de Bloom</h2><div class="tabla-caja"><table><thead><tr><th scope="col">Nivel</th><th scope="col">Correctas</th></tr></thead><tbody>' +
       orden.filter(function (k) { return blooms[k]; }).map(function (k) { return '<tr><th scope="row">' + k + '</th><td>' + blooms[k].c + ' de ' + blooms[k].t + '</td></tr>'; }).join('') + '</tbody></table></div>' +
-      '<h2>Código de resultado</h2><p class="texto">Entrega este código a tu docente. Contiene tu nombre, la fecha y tu puntaje.</p>' +
+      '<div id="envioEstado" class="retro" aria-live="polite" style="margin-top:1.2rem"><strong>Enviando tu resultado…</strong>Se enviará a ' + esc(ev.correo) + ' con copia a tu docente.</div>' +
+      '<h2>Código de resultado</h2><p class="texto">Guárdalo como respaldo: contiene tu nombre, la fecha y tu puntaje, y tu docente puede verificarlo.</p>' +
       '<div class="calc" style="margin-top:.8rem"><label for="codigoEv">Tu código</label><textarea id="codigoEv" rows="3" readonly style="width:100%;padding:.65rem .8rem;font:.85rem monospace;border-radius:10px;border:2px solid var(--borde);background:var(--papel);color:var(--tinta)">' + esc(codigo) + '</textarea>' +
       '<div class="fila-btn"><button type="button" class="btn btn-primario" id="copiarCod">Copiar código</button><button type="button" class="btn" id="imprimirEv">Imprimir o guardar PDF</button></div><div id="copiaRes" aria-live="polite" style="margin-top:.5rem;font-weight:700"></div></div>' +
       '<h2>Revisión de tus respuestas</h2><ol class="repaso" style="padding-left:0">' +
@@ -893,6 +903,66 @@
     });
     document.getElementById('imprimirEv').addEventListener('click', function () { window.print(); });
     document.getElementById('otraEv').addEventListener('click', function () { ev = null; vistaEvaluacion(); });
+    enviarResultado({ fecha: fecha, correctas: correctas, total: total, pct: pct, logrado: logrado, mods: mods, blooms: blooms, orden: orden, codigo: codigo });
+  }
+
+  /* Envío al flujo de Pabbly Connect (webhook): fila en la planilla del docente + correo al estudiante con copia al docente. */
+  var WEBHOOK = 'https://connect.pabbly.com/webhook-listener/webhook/IjU3NjMwNTZlMDYzNDA0MzE1MjZiNTUzNiI_3D_pc/IjU3NjcwNTZiMDYzNjA0MzQ1MjY0NTUzMzUxMzMi_pc';
+  var CORREO_DOCENTE = 'christian.sanmartin.oyarzun@gmail.com';
+  function enviarResultado(r) {
+    var h = function (t) { return esc(t); };
+    var nivel = r.logrado ? 'Logrado' : 'Por lograr';
+    var porModulo = EAA.MODULOS.map(function (m, i) { return (i + 1) + '. ' + m.titulo + ': ' + (r.mods[m.id] || 0) + ' de 2'; });
+    var porBloom = r.orden.filter(function (k) { return r.blooms[k]; }).map(function (k) { return k + ': ' + r.blooms[k].c + ' de ' + r.blooms[k].t; });
+    var retro = ev.items.map(function (it, k) {
+      var ok = it.ord.filter(function (o) { return o.ok; })[0];
+      return { n: k + 1, q: it.q, b: it.b, acierto: it.acierto, tuya: it.sel === null ? 'Sin responder' : it.ord[it.sel].t, correcta: ok.t, exp: it.r };
+    });
+    var retroTexto = retro.map(function (x) { return x.n + '. ' + x.q + ' | ' + (x.acierto ? 'Correcta' : 'Incorrecta') + ' | Tu respuesta: ' + x.tuya + (x.acierto ? '' : ' | Correcta: ' + x.correcta) + ' | ' + x.exp; }).join('\n');
+    var td = 'style="padding:6px 10px;border:1px solid #DDE2EA;font-size:14px"';
+    var cuerpo = '<div style="font-family:Arial,Helvetica,sans-serif;color:#141A24;max-width:640px">' +
+      '<h2 style="color:#0A2A5C;margin:0 0 4px">Resultado de la evaluación AVSEC</h2>' +
+      '<p style="margin:0 0 16px;color:#4B5563">Objetos prohibidos y mercancías peligrosas · Escuela Técnica Aeronáutica (DGAC)</p>' +
+      '<p style="margin:0 0 4px"><strong>' + h(ev.nombre) + '</strong>' + (ev.seccion ? ' · ' + h(ev.seccion) : '') + ' · ' + fechaLarga(r.fecha) + '</p>' +
+      '<p style="font-size:22px;margin:8px 0;color:#0A2A5C"><strong>' + r.correctas + ' de ' + r.total + ' (' + r.pct + '%) · ' + nivel + '</strong></p>' +
+      '<p style="margin:0 0 16px;color:#4B5563">Exigencia referencial: ' + EXIGENCIA + '% de logro.</p>' +
+      '<h3 style="color:#0A2A5C;margin:16px 0 6px">Por módulo</h3><table style="border-collapse:collapse">' +
+      EAA.MODULOS.map(function (m, i) { return '<tr><td ' + td + '>' + (i + 1) + '. ' + h(m.titulo) + '</td><td ' + td + '>' + (r.mods[m.id] || 0) + ' de 2</td></tr>'; }).join('') + '</table>' +
+      '<h3 style="color:#0A2A5C;margin:16px 0 6px">Por nivel de Bloom</h3><table style="border-collapse:collapse">' +
+      r.orden.filter(function (k) { return r.blooms[k]; }).map(function (k) { return '<tr><td ' + td + '>' + k + '</td><td ' + td + '>' + r.blooms[k].c + ' de ' + r.blooms[k].t + '</td></tr>'; }).join('') + '</table>' +
+      '<h3 style="color:#0A2A5C;margin:16px 0 6px">Retroalimentación por pregunta</h3>' +
+      retro.map(function (x) {
+        return '<div style="margin:0 0 12px;padding:10px 12px;border-left:4px solid ' + (x.acierto ? '#157A43' : '#B8283F') + ';background:#F3F5F8">' +
+          '<p style="margin:0 0 4px"><strong>' + x.n + '. ' + h(x.q) + '</strong></p>' +
+          '<p style="margin:0">' + (x.acierto ? '✓ Correcta: ' + h(x.tuya) : '✗ Tu respuesta: ' + h(x.tuya) + '<br>Respuesta correcta: ' + h(x.correcta)) + '</p>' +
+          '<p style="margin:4px 0 0;color:#4B5563"><em>' + h(x.exp) + '</em> (' + x.b + ')</p></div>';
+      }).join('') +
+      '<p style="margin:16px 0 4px;color:#4B5563;font-size:13px">Código de resultado (verificable por tu docente en la sección Evaluación del sitio):</p>' +
+      '<p style="font-family:monospace;font-size:12px;word-break:break-all;margin:0">' + h(r.codigo) + '</p>' +
+      '<p style="margin:16px 0 0;font-size:13px"><a href="https://christiansanmartinoyarzun-cyber.github.io/estudio-avsec1/">Volver al Estudio AVSEC</a></p></div>';
+    var datos = {
+      fecha: r.fecha, nombre: ev.nombre, correo: ev.correo, seccion: ev.seccion || '—',
+      correctas: String(r.correctas), total: String(r.total), porcentaje: r.pct + '%', nivel: nivel,
+      por_modulo: porModulo.join(' | '), por_bloom: porBloom.join(' | '), retroalimentacion: retroTexto,
+      codigo: r.codigo, correo_docente: CORREO_DOCENTE,
+      asunto: 'Resultado evaluación AVSEC: ' + r.correctas + ' de ' + r.total + ' (' + r.pct + '%) · ' + ev.nombre,
+      cuerpo_html: cuerpo
+    };
+    var estado = document.getElementById('envioEstado');
+    var mostrar = function (ok) {
+      if (!estado) return;
+      estado.className = 'retro ' + (ok ? 'bien' : 'mal');
+      estado.innerHTML = ok
+        ? '<strong>Resultado enviado.</strong>En unos minutos llegará a ' + esc(ev.correo) + ', con copia a tu docente. Si no lo ves, revisa la carpeta de spam.'
+        : '<strong>No se pudo enviar el resultado.</strong>Revisa tu conexión e inténtalo de nuevo. Mientras tanto, guarda tu código de resultado.<div class="fila-btn"><button type="button" class="btn" id="reenviar">Reintentar el envío</button></div>';
+      var b = document.getElementById('reenviar');
+      if (b) b.addEventListener('click', function () { estado.className = 'retro'; estado.innerHTML = '<strong>Enviando tu resultado…</strong>'; enviar(); });
+    };
+    var enviar = function () {
+      fetch(WEBHOOK, { method: 'POST', mode: 'no-cors', body: new URLSearchParams(datos) })
+        .then(function () { mostrar(true); }, function () { mostrar(false); });
+    };
+    enviar();
   }
 
   /* ---------- Service worker ---------- */
