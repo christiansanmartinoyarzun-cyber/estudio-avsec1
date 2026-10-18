@@ -102,11 +102,11 @@
   var SECCIONES = [
     { r: '', ico: '🏠', t: 'Inicio' },
     { r: 'modulos', ico: '📘', t: 'Módulos' },
+    { r: 'glosario', ico: '🔤', t: 'Glosario' },
+    { r: 'fichas', ico: '🗂️', t: 'Fichas' },
     { r: 'practica', ico: '📝', t: 'Práctica' },
     { r: 'puesto', ico: '🛃', t: 'Puesto de control' },
     { r: 'evaluacion', ico: '🎓', t: 'Evaluación' },
-    { r: 'fichas', ico: '🗂️', t: 'Fichas' },
-    { r: 'glosario', ico: '🔤', t: 'Glosario' },
     { r: 'fuentes', ico: '📚', t: 'Fuentes', escritorio: true }
   ];
   function dibujarNav(actual) {
@@ -184,19 +184,7 @@
           ? '<a class="btn btn-primario" href="#/modulo/' + siguiente.id + '">' + (vistos ? 'Continuar: ' : 'Empezar: ') + esc(siguiente.titulo) + '</a>'
           : '<a class="btn btn-primario" href="#/evaluacion">Rendir la evaluación</a>') +
       '</div>' +
-      '<section class="ruta" aria-labelledby="rutaT"><h2 id="rutaT">Cómo estudiar en este sitio</h2>' +
-      '<p class="texto">El sitio está pensado como un recorrido en tres etapas. Primero aprendes con los módulos, luego refuerzas lo aprendido en las secciones de práctica y, al final, demuestras tu logro en la evaluación.</p>' +
-      '<ol class="pasos">' +
-        '<li><div><h3>Aprende con los módulos</h3><p>Estudia los 8 módulos, idealmente en orden. Cada uno parte con sus objetivos y termina con una síntesis de lo esencial. Márcalo como estudiado al terminar.</p>' +
-          '<p class="ruta-estado">' + vistos + ' de ' + total + ' módulos estudiados · <a href="#/modulos">Ir a los módulos</a></p></div></li>' +
-        '<li><div><h3>Refuerza lo aprendido</h3><p>Usa estas secciones las veces que quieras, en cualquier orden:</p><ul class="ruta-lista">' +
-          '<li><a href="#/practica">Práctica</a>: preguntas por módulo con retroalimentación inmediata.</li>' +
-          '<li><a href="#/puesto">Puesto de control</a>: decide si un objeto viaja en cabina o en bodega.</li>' +
-          '<li><a href="#/fichas">Fichas</a>: memoriza las reglas de cada objeto del catálogo.</li>' +
-          '<li><a href="#/glosario">Glosario</a>: repasa los términos clave en español e inglés.</li></ul></div></li>' +
-        '<li><div><h3>Demuestra tu logro</h3><p>Cuando termines los módulos, rinde la <a href="#/evaluacion">Evaluación</a>: 16 preguntas sin retroalimentación hasta entregar. Al final obtienes un código de resultado para tu docente.</p>' +
-          (p.eval ? '<p class="ruta-estado">Tu mejor resultado: ' + p.eval.pct + '%</p>' : '') + '</div></li>' +
-      '</ol></section>' +
+      rutaInicio(p, vistos, total) +
       '<div class="progreso-global" role="group" aria-label="Tu avance">' +
         '<div class="fila"><span>Módulos estudiados</span><span>' + vistos + ' de ' + total + '</span></div>' +
         '<div class="barra-prog" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '"><i style="width:' + pct + '%"></i></div>' +
@@ -209,9 +197,61 @@
       html += '<section class="reto" aria-labelledby="retoT"><h2 id="retoT">Reto rápido</h2><div id="retoCaja"></div></section>';
     }
     html += avisoCatalogo();
-    html += '<h2>Módulos</h2><ul class="lista-modulos">' + EAA.MODULOS.map(function (m, i) { return tarjetaModulo(m, i, p); }).join('') + '</ul>';
+    html += '<h2>Módulos</h2>' + listaModulosAgrupada(p);
     pintar(html);
     if (catalogo.elementos.length) retoRapido();
+  }
+
+
+  /* ---------- Recorrido por procesos ---------- */
+  var NOMBRE_SECCION = { modulos: 'Módulos', glosario: 'Glosario', fichas: 'Fichas', practica: 'Práctica', puesto: 'Puesto de control', evaluacion: 'Evaluación' };
+  function enlacesSecciones(ids) {
+    return ids.map(function (id) { return '<a href="#/' + id + '">' + NOMBRE_SECCION[id] + '</a>'; }).join(' y ');
+  }
+  function estadoEtapa(n, p, vistos, total) {
+    if (n === 1) return vistos + ' de ' + total + ' módulos estudiados';
+    if (n === 2) { var f = Object.keys(p.fichas).filter(function (k) { return p.fichas[k]; }).length; return f + ' fichas dominadas'; }
+    if (n === 3) { var q = Object.keys(p.quiz).map(function (k) { return p.quiz[k]; }); return q.length ? 'Mejor puntaje: ' + Math.max.apply(null, q) + '%' : 'Aún sin práctica'; }
+    if (n === 4) return p.puesto.jugadas ? 'Mejor partida: ' + p.puesto.mejor + ' de 20 puntos' : 'Aún sin partidas';
+    return p.eval ? 'Mejor resultado: ' + p.eval.pct + '%' : 'Pendiente';
+  }
+  function rutaInicio(p, vistos, total) {
+    return '<section class="ruta" aria-labelledby="rutaT"><h2 id="rutaT">Cómo estudiar en este sitio</h2>' +
+      '<p class="texto">El sitio está organizado como un proceso de aprendizaje en cinco etapas. Cada etapa te pide un nivel mayor de aplicación que la anterior. Primero estudias y comprendes las normas y los objetos. Después las aplicas, primero con apoyo y luego en situaciones simuladas del punto de control. Al final demuestras tu logro en la evaluación sumativa.</p>' +
+      '<p class="texto" style="margin-top:.6rem">Recórrelas en orden la primera vez. Después puedes volver a cualquier etapa para reforzar lo que necesites. Cada sección parte con una guía de para qué sirve y cómo aprovecharla.</p>' +
+      '<ol class="pasos etapas">' + EAA.ETAPAS.map(function (e) {
+        return '<li><div><p class="etapa-sup">Etapa ' + e.n + ' · ' + esc(e.verbo) + '</p><h3>' + esc(e.titulo) + '</h3>' +
+          '<p>' + esc(e.resumen) + '</p>' +
+          '<dl class="etapa-datos"><div><dt>Dónde</dt><dd>' + enlacesSecciones(e.secciones) + '</dd></div>' +
+          '<div><dt>Nivel de Bloom</dt><dd>' + esc(e.bloom) + '</dd></div>' +
+          '<div><dt>Tiempo</dt><dd>' + esc(e.tiempo) + '</dd></div>' +
+          '<div><dt>Tu avance</dt><dd>' + estadoEtapa(e.n, p, vistos, total) + '</dd></div></dl></div></li>';
+      }).join('') + '</ol></section>';
+  }
+  function guiaSeccion(id) {
+    var g = EAA.GUIA[id]; if (!g) return '';
+    var e = EAA.ETAPAS[g.etapa - 1];
+    var li = function (a) { return '<ul>' + a.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>'; };
+    return '<details class="guia" open><summary><span class="guia-etapa">Etapa ' + e.n + ' de 5 · ' + esc(e.verbo) + '</span><span class="guia-tit">Para qué sirve esta sección</span></summary>' +
+      '<div class="guia-cuerpo"><p>' + esc(g.para) + '</p>' +
+      '<div class="guia-grid"><div><h3>Qué harás</h3>' + li(g.haras) + '</div><div><h3>Cómo aprovecharla</h3>' + li(g.como) + '</div></div>' +
+      '<p class="guia-logro"><strong>Al terminar esta etapa podrás:</strong> ' + esc(g.logras) + '</p>' +
+      '<p class="guia-meta">Nivel de Bloom: ' + esc(e.bloom) + ' · ' + esc(e.tiempo) + '</p></div></details>';
+  }
+  function pasoEtapa(id) {
+    var g = EAA.GUIA[id]; if (!g) return '';
+    var orden = ['modulos', 'glosario', 'fichas', 'practica', 'puesto', 'evaluacion'];
+    var k = orden.indexOf(id), ant = orden[k - 1], sig = orden[k + 1];
+    return '<nav class="mod-nav paso-etapa" aria-label="Recorrido">' +
+      (ant ? '<a class="btn" href="#/' + ant + '">‹ ' + NOMBRE_SECCION[ant] + '</a>' : '<a class="btn" href="#/">‹ Inicio</a>') +
+      (sig ? '<a class="btn btn-primario" href="#/' + sig + '">Siguiente: ' + NOMBRE_SECCION[sig] + ' ›</a>' : '<a class="btn" href="#/">Volver al inicio</a>') + '</nav>';
+  }
+  function bloqueDe(id) { return EAA.BLOQUES.filter(function (b) { return b.modulos.indexOf(id) !== -1; })[0]; }
+  function listaModulosAgrupada(p) {
+    return EAA.BLOQUES.map(function (b) {
+      return '<section class="bloque-mod"><h3>' + esc(b.titulo) + '</h3><p class="bloque-desc">' + esc(b.desc) + '</p><ul class="lista-modulos">' +
+        b.modulos.map(function (id) { var i = EAA.MODULOS.map(function (m) { return m.id; }).indexOf(id); return tarjetaModulo(EAA.MODULOS[i], i, p); }).join('') + '</ul></section>';
+    }).join('');
   }
 
   function tarjetaModulo(m, i, p) {
@@ -254,8 +294,7 @@
      ======================================================= */
   function vistaModulos() {
     var p = progreso();
-    pintar('<h1>Módulos</h1><p class="lead">Ocho módulos para estudiar en orden o por separado. Cada uno termina con una síntesis y su práctica.</p>' +
-      '<ul class="lista-modulos" style="margin-top:1.4rem">' + EAA.MODULOS.map(function (m, i) { return tarjetaModulo(m, i, p); }).join('') + '</ul>');
+    pintar('<h1>Módulos</h1>' + guiaSeccion('modulos') + '<h2>Los 8 módulos</h2>' + listaModulosAgrupada(p) + pasoEtapa('modulos'));
   }
 
   function vistaModulo(id) {
@@ -266,15 +305,23 @@
     var p = progreso();
     document.title = m.titulo + ' · Estudio AVSEC';
 
-    var html = '<p class="migas"><a href="#/modulos">Módulos</a> › Módulo ' + (idx + 1) + '</p>' +
+    var html = '<p class="migas"><a href="#/modulos">Módulos</a> › ' + esc(bloqueDe(m.id).titulo) + ' › Módulo ' + (idx + 1) + '</p>' +
       '<div class="cab-mod"><span class="placa placa-grande" aria-hidden="true">' + (idx + 1) + '</span><div><h1>' + esc(m.titulo) + '</h1>' +
       '<p class="lead" style="margin-top:.3rem">' + esc(m.resumen) + '</p></div></div>' +
+      (EAA.PROPOSITO[m.id] ? '<section class="proposito" aria-labelledby="propT"><h2 id="propT">Para qué sirve este módulo</h2><p>' + esc(EAA.PROPOSITO[m.id].para) + '</p>' +
+        '<h3>Lo usarás cuando</h3><ul>' + EAA.PROPOSITO[m.id].usos.map(function (u) { return '<li>' + esc(u) + '</li>'; }).join('') + '</ul></section>' : '') +
       '<section class="objetivos" aria-labelledby="objT"><h2 id="objT">Al terminar podrás</h2><ul>' +
       m.objetivos.map(function (o) { return '<li>' + esc(o) + '</li>'; }).join('') + '</ul></section>';
 
     html += '<div class="texto">' + m.bloques.map(bloque).join('') + '</div>';
     html += '<section class="clave-lista" aria-labelledby="claveT"><h2 id="claveT">Lo esencial</h2><ul>' +
       m.clave.map(function (c) { return '<li>' + esc(c) + '</li>'; }).join('') + '</ul></section>';
+    if (EAA.PROPOSITO[m.id]) {
+      var cs = EAA.PROPOSITO[m.id].caso;
+      html += '<section class="caso" aria-labelledby="casoT"><h2 id="casoT">Caso para aplicar</h2><p>' + esc(cs.s) + '</p>' +
+        '<p class="caso-indic">Piensa tu respuesta antes de ver la solución.</p>' +
+        '<details><summary>Ver la solución</summary><p>' + esc(cs.r) + '</p></details></section>';
+    }
 
     html += '<div class="mod-pie"><button type="button" class="btn ' + (p.vistos[m.id] ? '' : 'btn-primario') + '" id="marcarVisto" aria-pressed="' + !!p.vistos[m.id] + '">' +
       (p.vistos[m.id] ? '✓ Estudiado (quitar marca)' : 'Marcar como estudiado') + '</button>' +
@@ -380,8 +427,7 @@
   function vistaPractica(arg) {
     var p = progreso();
     if (arg) { iniciarQuiz(arg); return; }
-    var html = '<h1>Práctica</h1><p class="lead">Aquí practicas para aprender: después de cada pregunta ves si acertaste y por qué. Puedes repetir cuantas veces quieras y nada de esto se informa a tu docente.</p>' +
-      '<p class="texto" style="margin-top:.6rem">Elige un módulo para reforzarlo o el examen integrador para mezclar todos. Cuando te sientas preparado, rinde la <a href="#/evaluacion">Evaluación</a>.</p>' + avisoCatalogo() + '<div class="selector">';
+    var html = '<h1>Práctica</h1>' + guiaSeccion('practica') + '<h2>Elige qué practicar</h2>' + avisoCatalogo() + '<div class="selector">';
     html += '<button type="button" class="opc-modo" data-q="todo"><span class="placa" aria-hidden="true">★</span><span><strong>Examen integrador</strong><small>12 preguntas de todos los módulos, más casos tomados del catálogo.</small></span>' +
       (p.quiz.todo != null ? '<span class="mejor">Mejor: ' + p.quiz.todo + '%</span>' : '') + '</button>';
     EAA.MODULOS.forEach(function (m, i) {
@@ -389,7 +435,7 @@
       html += '<button type="button" class="opc-modo" data-q="' + m.id + '"><span class="placa" aria-hidden="true">' + (i + 1) + '</span><span><strong>' + esc(m.titulo) + '</strong><small>' + n + ' preguntas</small></span>' +
         (p.quiz[m.id] != null ? '<span class="mejor">Mejor: ' + p.quiz[m.id] + '%</span>' : '') + '</button>';
     });
-    html += '</div>';
+    html += '</div>' + pasoEtapa('practica');
     pintar(html);
     $main.querySelectorAll('.opc-modo').forEach(function (b) {
       b.addEventListener('click', function () { location.hash = '#/practica/' + b.getAttribute('data-q'); });
@@ -487,9 +533,9 @@
   function vistaPuesto() {
     if (!catalogo.elementos.length) { pintar('<h1>Puesto de control</h1>' + avisoCatalogo()); return; }
     var opts = '<option value="">Todas las categorías</option>' + CATEGORIAS.map(function (c) { return '<option value="' + c.id + '">' + esc(c.n) + '</option>'; }).join('');
-    pintar('<h1>Puesto de control</h1><p class="lead">Te mostramos un objeto del catálogo. Decide qué estado tiene en cabina y en bodega. Son 10 objetos por partida.</p>' +
+    pintar('<h1>Puesto de control</h1>' + guiaSeccion('puesto') + '<h2>Nueva partida</h2>' +
       '<div class="filtro-cat"><label for="selCat" style="font-weight:700;display:block;margin-bottom:.3rem">Categoría</label><select id="selCat">' + opts + '</select></div>' +
-      '<div class="fila-btn"><button type="button" class="btn btn-primario" id="jugar">Empezar</button></div>');
+      '<div class="fila-btn"><button type="button" class="btn btn-primario" id="jugar">Empezar</button></div>' + pasoEtapa('puesto'));
     document.getElementById('jugar').addEventListener('click', function () {
       var cat = document.getElementById('selCat').value;
       var base = catalogo.elementos.filter(function (e) { return !cat || e.categoria === cat; });
@@ -577,9 +623,9 @@
     if (!catalogo.elementos.length) { pintar('<h1>Fichas</h1>' + avisoCatalogo()); return; }
     var p = progreso();
     var opts = '<option value="">Todas las categorías</option>' + CATEGORIAS.map(function (c) { return '<option value="' + c.id + '">' + esc(c.n) + '</option>'; }).join('');
-    pintar('<h1>Fichas de estudio</h1><p class="lead">Mira el objeto, recuerda su regla y voltea la ficha para comprobarlo. Marca las que ya dominas y se quedan fuera del mazo.</p>' +
+    pintar('<h1>Fichas de estudio</h1>' + guiaSeccion('fichas') +
       '<div class="filtro-cat"><label for="fCat" style="font-weight:700;display:block;margin-bottom:.3rem">Categoría</label><select id="fCat">' + opts + '</select></div>' +
-      '<div id="fichaCaja"></div>');
+      '<div id="fichaCaja"></div>' + pasoEtapa('fichas'));
     fichas = { cat: '' };
     document.getElementById('fCat').addEventListener('change', function (ev) { fichas.cat = ev.target.value; armarMazo(); });
     armarMazo();
@@ -640,9 +686,9 @@
      ======================================================= */
   function norm(s) { return String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); }
   function vistaGlosario() {
-    pintar('<h1>Glosario</h1><p class="lead">Términos clave con su equivalente en inglés, útil para leer documentos OACI.</p>' +
+    pintar('<h1>Glosario</h1>' + guiaSeccion('glosario') +
       '<div class="buscar"><label for="bGlos" class="sr-only">Buscar un término</label><input id="bGlos" type="search" placeholder="Buscar un término, por ejemplo «Wh» o «hold»" autocomplete="off"></div>' +
-      '<p id="nGlos" class="lead" style="font-size:.95rem;margin-top:.6rem" aria-live="polite"></p><ul class="glosario" id="listaGlos"></ul>');
+      '<p id="nGlos" class="lead" style="font-size:.95rem;margin-top:.6rem" aria-live="polite"></p><ul class="glosario" id="listaGlos"></ul>' + pasoEtapa('glosario'));
     var pintarLista = function () {
       var q = norm(document.getElementById('bGlos').value.trim());
       var res = EAA.GLOSARIO.filter(function (g) { return !q || norm(g.es + ' ' + g.en + ' ' + g.d).indexOf(q) !== -1; });
@@ -722,7 +768,7 @@
     var previo = p.eval ? '<p class="lead" style="font-size:1rem">Tu mejor resultado en este navegador: <strong>' + p.eval.pct + '%</strong> (' + fechaLarga(p.eval.fecha) + ').</p>' : '';
     var faltan = EAA.MODULOS.filter(function (m) { return !p.vistos[m.id]; }).length;
     var avisoFaltan = faltan ? '<aside class="callout alerta"><h3>Te ' + (faltan === 1 ? 'falta 1 módulo' : 'faltan ' + faltan + ' módulos') + ' por estudiar</h3><p>Puedes rendir la evaluación igual, pero te recomendamos terminar los <a href="#/modulos">módulos</a> y reforzar en la <a href="#/practica">Práctica</a> antes.</p></aside>' : '';
-    pintar('<h1>Evaluación</h1><p class="lead">Es la evaluación de cierre del recorrido: 16 ítems, dos por módulo, con niveles de Bloom desde recordar hasta analizar.</p>' + previo + avisoFaltan +
+    pintar('<h1>Evaluación final</h1>' + guiaSeccion('evaluacion') + previo + avisoFaltan +
       '<h2>¿En qué se diferencia de la Práctica?</h2>' +
       '<div class="tabla-caja"><table><thead><tr><th scope="col"></th><th scope="col">Práctica</th><th scope="col">Evaluación</th></tr></thead><tbody>' +
       '<tr><th scope="row">Propósito</th><td>Formativo: aprender y reforzar.</td><td>Sumativo: demostrar el logro al cerrar el recorrido.</td></tr>' +

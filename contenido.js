@@ -434,3 +434,176 @@ EAA.EVALUACION = [
   { m: 'm8', b: 'Analizar', q: 'Un pasajero molesto dice «siempre me dejan pasar con esto». ¿Qué respuesta es adecuada?', o: ['Mantener la cortesía y la firmeza, explicar el motivo y ofrecer una alternativa', 'Ceder para evitar el conflicto', 'Discutir hasta que acepte', 'Pasarlo a otro agente sin motivo'], r: 'La norma no se negocia, pero el trato respetuoso y una alternativa ayudan a resolver.' },
   { m: 'm8', b: 'Aplicar', q: 'Durante una inspección manual aparece algo que parece un artefacto explosivo. ¿Qué haces?', o: ['No lo manipulas, activas el protocolo de alerta y avisas al supervisor', 'Lo abres para comprobarlo', 'Se lo devuelves al pasajero', 'Lo dejas en el mostrador y sigues con la fila'], r: 'Estas situaciones se escalan: no se resuelven en el mostrador del control.' }
 ];
+
+/* =========================================================
+   Recorrido por procesos
+   Cinco etapas con progresión de aplicación:
+   estudiar → comprender → aplicar con apoyo → aplicar en situación → demostrar.
+   ========================================================= */
+EAA.ETAPAS = [
+  { n: 1, verbo: 'Estudiar', titulo: 'Estudiar las normas y los objetos', secciones: ['modulos'], bloom: 'Recordar y comprender', tiempo: 'Cerca de 1 h 30 min en total (8 módulos de 10 a 15 min)',
+    resumen: 'Lees los 8 módulos: primero las normas y los conceptos, luego las reglas de cada familia de objetos y, al final, el proceso del punto de control. Cada módulo cierra con un caso para aplicar.' },
+  { n: 2, verbo: 'Comprender', titulo: 'Fijar el vocabulario y la regla de cada objeto', secciones: ['glosario', 'fichas'], bloom: 'Comprender', tiempo: '15 a 20 min por sesión, las veces que necesites',
+    resumen: 'Consolidas lo estudiado: el glosario te da los términos normativos en español e inglés, y las fichas te hacen recordar la regla exacta de cada uno de los objetos del catálogo.' },
+  { n: 3, verbo: 'Aplicar con apoyo', titulo: 'Aplicar las reglas con retroalimentación inmediata', secciones: ['practica'], bloom: 'Aplicar', tiempo: '5 a 10 min por módulo practicado',
+    resumen: 'Respondes preguntas por módulo y ves al instante si acertaste y por qué. Es el espacio seguro para equivocarte y corregir antes de decidir sin ayuda.' },
+  { n: 4, verbo: 'Aplicar en situación', titulo: 'Decidir como en el punto de control', secciones: ['puesto'], bloom: 'Aplicar y analizar', tiempo: '5 min por partida de 10 objetos',
+    resumen: 'Frente a un objeto al azar, decides sin pistas su estado en cabina y en bodega. Integras varios módulos a la vez, como ocurre en el trabajo real.' },
+  { n: 5, verbo: 'Demostrar', titulo: 'Demostrar el logro en la evaluación final', secciones: ['evaluacion'], bloom: 'Todos los niveles, de recordar a analizar', tiempo: 'Unos 20 min sin interrupciones',
+    resumen: 'Rindes la evaluación sumativa: 16 ítems sin retroalimentación hasta entregar. Obtienes tu desglose por módulo y por nivel de Bloom, y un código de resultado para tu docente.' }
+];
+
+/* Guía detallada de cada sección: para qué sirve, qué harás, cómo aprovecharla y qué lograrás. */
+EAA.GUIA = {
+  modulos: {
+    nombre: 'Módulos', etapa: 1,
+    para: 'Es la base de todo el recorrido. En 8 módulos breves estudias las normas que regulan lo que un pasajero puede llevar en un avión (Anexos 17 y 18 de la OACI, Doc 9284 y su Tabla 8-1, DAR 17 y PNSAC) y las reglas concretas para cada familia de objetos: baterías, líquidos, cortopunzantes, armas e inflamables. El último módulo traslada todo eso al proceso que sigue un agente en el punto de control.',
+    haras: [
+      'Leer cada módulo, que parte con sus objetivos y con una explicación de para qué te sirve en el trabajo.',
+      'Usar las herramientas interactivas: los rombos de las 9 clases y la calculadora de Wh.',
+      'Revisar las reglas del catálogo que aparecen dentro de cada módulo.',
+      'Resolver el caso para aplicar que cierra cada módulo y comparar tu respuesta con la solución.',
+      'Marcar el módulo como estudiado para seguir tu avance.'
+    ],
+    como: [
+      'Sigue el orden. El bloque A (módulos 1 a 3) entrega las normas y conceptos que los bloques B y C dan por sabidos.',
+      'Estudia un módulo por sesión: cada uno toma entre 10 y 15 minutos.',
+      'Intenta resolver el caso final antes de abrir la solución; si te cuesta, vuelve a «Lo esencial».'
+    ],
+    logras: 'Identificar qué norma responde cada pregunta, explicar las reglas de cada familia de objetos y describir el proceso de decisión en el punto de control.'
+  },
+  glosario: {
+    nombre: 'Glosario', etapa: 2,
+    para: 'Los documentos de la OACI y de la DGAC usan un vocabulario preciso, y muchos términos aparecen en inglés en manuales, etiquetas, la IATA DGR y el trato con tripulaciones o pasajeros extranjeros. El glosario reúne 29 términos clave con su equivalente en inglés y una definición breve, para que leas y expliques la normativa con la terminología correcta.',
+    haras: [
+      'Buscar un término por su nombre en español o en inglés, o por una palabra de su definición.',
+      'Comparar cada término con su equivalente en inglés.'
+    ],
+    como: [
+      'Tenlo a mano mientras estudias los módulos y consulta cada término que no tengas claro.',
+      'Repasa los equivalentes en inglés: son los que encontrarás en el Doc 9284 y en la IATA DGR.',
+      'Pon a prueba tu comprensión explicando cada término con tus propias palabras antes de leer su definición.'
+    ],
+    logras: 'Comprender y usar con precisión los términos normativos, en español y en inglés.'
+  },
+  fichas: {
+    nombre: 'Fichas', etapa: 2,
+    para: 'Cada ficha es uno de los objetos del catálogo. Ves el objeto, intentas recordar su regla en cabina y en bodega, y luego compruebas. Es práctica de recuperación: recordar activamente fija la información mucho mejor que releerla, y te prepara para decidir sin consultar.',
+    haras: [
+      'Ver el objeto y decir, antes de voltear, su estado en cabina y en bodega y sus condiciones.',
+      'Voltear la ficha para comprobar la regla, sus límites y su fuente normativa.',
+      'Marcar «La sabía» para sacarla del mazo o «Repasar de nuevo» para que vuelva al final.'
+    ],
+    como: [
+      'Filtra por la categoría del módulo que acabas de estudiar; cuando la domines, usa todas.',
+      'Responde en voz alta o por escrito antes de voltear: si solo «reconoces» la respuesta, no cuenta.',
+      'Vuelve a las fichas después de cada partida del puesto de control para repasar los objetos que fallaste.'
+    ],
+    logras: 'Recordar con exactitud el estado de cada objeto en cabina y en bodega, con sus condiciones y su fuente.'
+  },
+  practica: {
+    nombre: 'Práctica', etapa: 3,
+    para: 'Aquí aplicas lo estudiado con apoyo: después de cada pregunta ves si acertaste y la explicación de por qué. Es práctica formativa, así que los errores son parte del aprendizaje, puedes repetir sin límite y nada se informa a tu docente.',
+    haras: [
+      'Practicar un módulo con su banco de preguntas (36 en total).',
+      'Rendir el examen integrador: 12 preguntas que mezclan todos los módulos y casos tomados del catálogo.',
+      'Revisar al final las preguntas falladas, con su explicación y los módulos que conviene releer.'
+    ],
+    como: [
+      'Practica cada módulo justo después de estudiarlo, mientras está fresco.',
+      'Lee la explicación también cuando aciertes: confirma que acertaste por la razón correcta.',
+      'Repite hasta lograr al menos 80 % en cada módulo antes de pasar al puesto de control.'
+    ],
+    logras: 'Aplicar las reglas a preguntas concretas y saber qué módulos necesitas reforzar.'
+  },
+  puesto: {
+    nombre: 'Puesto de control', etapa: 4,
+    para: 'Simula la decisión que se toma en un punto de inspección: aparece un objeto y debes decidir, sin ayuda previa, su estado en el equipaje de mano y en el facturado. Exige integrar varios módulos a la vez (normas, clases, límites y zonas), como ocurre en el trabajo real.',
+    haras: [
+      'Jugar partidas de 10 objetos al azar del catálogo, con todas las categorías o con una sola.',
+      'Elegir el estado en cabina y en bodega de cada objeto (permitido, restringido o prohibido).',
+      'Recibir 1 punto por cada zona acertada y la regla completa después de verificar.',
+      'Revisar al final los objetos fallados.'
+    ],
+    como: [
+      'Empieza por las categorías que ya estudiaste y luego juega con todas.',
+      'Antes de responder, recorre tres preguntas: ¿qué familia de objeto es?, ¿qué norma aplica?, ¿hay condiciones?',
+      'Repasa con las fichas los objetos que fallaste y vuelve a jugar.'
+    ],
+    logras: 'Decidir con rapidez y fundamento qué ocurre con un objeto en cada zona del avión.'
+  },
+  evaluacion: {
+    nombre: 'Evaluación', etapa: 5,
+    para: 'Es la evaluación sumativa final del recorrido. Demuestra lo que lograste en las etapas anteriores con preguntas nuevas que no aparecen en la práctica, y entrega a tu docente un código de resultado como evidencia de logro.',
+    haras: [
+      'Responder 16 ítems: 2 por módulo, tomados al azar de un banco propio con niveles de Bloom de recordar a analizar.',
+      'Avanzar y retroceder libremente, cambiando respuestas antes de entregar.',
+      'Recibir al entregar tu puntaje, tu nivel de logro, el desglose por módulo y por nivel de Bloom y la revisión de cada respuesta.',
+      'Obtener un código de resultado para copiar o imprimir en PDF.'
+    ],
+    como: [
+      'Ríndela cuando hayas completado las etapas 1 a 4.',
+      'Resérvate unos 20 minutos sin interrupciones.',
+      'Usa el desglose por módulo para decidir qué volver a estudiar.'
+    ],
+    logras: 'Evidencia de tu logro para el docente y un diagnóstico preciso de lo que conviene reforzar.'
+  }
+};
+
+/* Bloques de módulos, propósito de cada módulo y caso para aplicar */
+EAA.BLOQUES = [
+  { id: 'A', titulo: 'Bloque A · Normas y conceptos', desc: 'Qué documentos mandan, cómo se lee una regla y cómo se clasifican las mercancías peligrosas.', modulos: ['m1', 'm2', 'm3'] },
+  { id: 'B', titulo: 'Bloque B · Objetos y sus reglas', desc: 'Las reglas exactas para cada familia de objetos que llevan los pasajeros.', modulos: ['m4', 'm5', 'm6', 'm7'] },
+  { id: 'C', titulo: 'Bloque C · Proceso de control', desc: 'Cómo se aplica todo lo anterior frente a un objeto real en el punto de inspección.', modulos: ['m8'] }
+];
+
+EAA.PROPOSITO = {
+  m1: {
+    para: 'Este módulo te da el mapa normativo. Sirve para saber a qué documento recurrir ante cada pregunta del punto de control, distinguir si una restricción es de seguridad de la aviación (AVSEC) o de mercancías peligrosas, y fundamentar tu decisión cuando la explicas a un pasajero o la escalas a tu supervisor. Todos los módulos siguientes citan estas normas.',
+    usos: ['Un pasajero pregunta por qué no puede llevar algo y espera una razón concreta.', 'Una regla cambió, por ejemplo con una adenda, y necesitas saber qué documento la modifica.', 'Escalas una duda al supervisor y debes indicar qué norma la regula.'],
+    caso: { s: 'Un pasajero reclama que en otro país le dejaron llevar su encendedor en la maleta facturada y pide que le muestres «dónde dice» que no puede. ¿Qué norma corresponde y qué tipo de restricción es?',
+      r: 'Es una restricción de mercancías peligrosas, no de AVSEC: el riesgo es el propio objeto como fuente de ignición. La norma es la Tabla 8-1 del Doc 9284 (ítem 5): un encendedor por persona, llevado sobre sí, y prohibido en el equipaje facturado. En Chile se aplica la edición DGAC de esas Instrucciones Técnicas.' }
+  },
+  m2: {
+    para: 'Sirve para leer correctamente cualquier regla del catálogo. Cada objeto tiene un estado distinto en cabina y en bodega, y «restringido» exige comprobar condiciones antes de decidir. Este módulo evita el error más común: responder «prohibido» o «permitido» sin decir en qué zona ni bajo qué condición, y te muestra cuándo existe una alternativa para el pasajero.',
+    usos: ['Interpretas una ficha o una consulta del catálogo.', 'Decides si un objeto puede pasar a bodega en vez de quedar retenido.', 'Explicas al pasajero qué alternativa tiene.'],
+    caso: { s: 'En el control aparece una navaja con hoja de 7 cm en el bolso de mano. El pasajero aún no ha entregado su maleta. ¿Qué estado tiene la navaja en cada zona y qué alternativa le ofreces?',
+      r: 'En cabina es restringida: solo se admiten hojas de hasta 4 cm, así que esta navaja no pasa. En bodega está permitida, bien envuelta. Como el pasajero aún no factura, le ofreces llevarla en la maleta facturada; si no es posible, el abandono voluntario.' }
+  },
+  m3: {
+    para: 'Las 9 clases son el lenguaje común de las mercancías peligrosas: aparecen en etiquetas, documentos y en la Tabla 8-1. Clasificar un objeto te permite anticipar su riesgo (gas, inflamable, corrosivo) aunque no figure en el catálogo, y entender por qué la norma lo trata como lo trata.',
+    usos: ['Aparece un producto que no figura en el catálogo y debes estimar su riesgo.', 'Lees un rombo o una etiqueta de peligro en un envase.', 'Justificas por qué un producto químico no puede viajar.'],
+    caso: { s: 'Un pasajero lleva un frasco sin etiqueta que, según dice, es «líquido para encender la parrilla». No figura así en el catálogo. ¿Cómo lo clasificas y qué decides?',
+      r: 'Por su función es un líquido inflamable, clase 3. Los líquidos inflamables no están autorizados como equipaje de pasajero, ni en cabina ni en bodega, así que no puede viajar. Ante un producto sin identificar, además, corresponde consultar al supervisor.' }
+  },
+  m4: {
+    para: 'Las baterías de litio son hoy la consulta más frecuente y la que más cambió con la Adenda 1. Este módulo sirve para calcular en el momento la energía de una batería, aplicar los cortes de 100 Wh y 160 Wh y las reglas de los power banks, y decidir con exactitud dónde puede viajar cada aparato y cada repuesto.',
+    usos: ['Un power bank trae impresos los mAh pero no los Wh.', 'Un fotógrafo o un técnico viaja con baterías de repuesto.', 'Un pasajero quiere llevar un scooter, una bicicleta eléctrica o una estación de energía.'],
+    caso: { s: 'Un pasajero lleva en su mochila de cabina un power bank de 26.800 mAh a 3,7 V y otro de 10.000 mAh a 3,7 V. ¿Pueden viajar?',
+      r: '26.800 × 3,7 ÷ 1000 = 99,16 Wh, y 10.000 × 3,7 ÷ 1000 = 37 Wh. Ambos están bajo 100 Wh, son 2 (el máximo por persona) y van en cabina, así que pueden viajar, protegidos contra cortocircuitos y sin recargarse a bordo. Aun así, la aerolínea podría prohibirlos.' }
+  },
+  m5: {
+    para: 'Sirve para resolver las consultas de líquidos sin confundir sus dos razones: la de seguridad AVSEC (límite de envases en cabina, que varía según el destino) y la de mercancías peligrosas (aerosoles, alcohol de alta graduación, hielo seco). Saber cuál aplica te permite dar la regla correcta y la explicación correcta.',
+    usos: ['Un pasajero viaja con botellas de alcohol de regalo.', 'Revisas perfumes, desodorantes y otros aerosoles de tocador.', 'Alguien transporta alimentos perecibles con hielo seco.'],
+    caso: { s: 'Una pasajera lleva en su maleta facturada 3 botellas de 1 L de pisco (40 %), un perfume de 100 ml y un desodorante en aerosol de 200 ml. ¿Cumple las reglas?',
+      r: 'Sí. El alcohol suma 3 L, bajo el máximo de 5 L para bebidas de más de 24 % y menos de 70 %, en envases de venta al detalle. Los artículos de tocador no superan 0,5 kg o 0,5 L por envase y suman 0,3 L, bajo el total de 2 kg o 2 L por persona.' }
+  },
+  m6: {
+    para: 'Sirve para aplicar el criterio AVSEC puro: evaluar si un objeto puede usarse como arma dentro de la cabina según su filo, su punta y su longitud. También te entrega el tratamiento especial de armas de fuego, municiones y sprays de defensa, que siempre exigen autorización o están prohibidos.',
+    usos: ['Un técnico viaja con herramientas en el bolso de mano.', 'Un deportista lleva bates, palos o equipos de artes marciales.', 'Un cazador o tirador deportivo viaja con su arma y sus municiones.'],
+    caso: { s: 'Un técnico lleva en su bolso de mano un destornillador de precisión pequeño, un alicate de punta y unas tijeras con hojas de 3 cm. ¿Qué pasa con cada uno?',
+      r: 'El destornillador de precisión de menor tamaño es la excepción admitida en cabina. El alicate de punta es una herramienta prohibida en cabina: debe ir en bodega. Las tijeras, con hojas de hasta 4 cm, pueden ir en cabina.' }
+  },
+  m7: {
+    para: 'Sirve para reconocer las pocas fuentes de ignición y gases que la Tabla 8-1 acepta (encendedor o fósforos, plancha a gas, cartuchos de CO₂), con sus condiciones exactas, y para identificar sin dudar los combustibles y la pirotecnia que no pueden viajar en ningún equipaje.',
+    usos: ['Un fumador viaja con encendedor o fósforos.', 'Un viajero de camping lleva gas o combustible para cocinar.', 'Alguien quiere llevar fuegos artificiales o bengalas para una celebración.'],
+    caso: { s: 'Un viajero que va de camping lleva en su maleta facturada un cartucho de gas para su cocinilla y un encendedor. ¿Qué corresponde?',
+      r: 'El cartucho de gas de camping no puede viajar en ningún equipaje. El encendedor tampoco puede ir en bodega: se admite uno por persona, llevado sobre sí (en el bolsillo).' }
+  },
+  m8: {
+    para: 'Es el módulo de aplicación. Integra todo lo anterior en el proceso que sigue un agente frente a un objeto real (detectar, evaluar, resolver, comunicar y registrar) y en la forma de comunicar la decisión con respeto y firmeza. Es el puente directo hacia el puesto de control simulado y la evaluación final.',
+    usos: ['Aparece un objeto prohibido o restringido en la imagen radiográfica o en la inspección manual.', 'Debes comunicar una decisión a un pasajero molesto o apurado.', 'Hay más de un objeto en el mismo bulto y cada uno tiene una regla distinta.'],
+    caso: { s: 'En la imagen radiográfica aparecen, en el mismo bolso de mano, un power bank y un spray de defensa personal. El pasajero tiene prisa. Ordena tu actuar.',
+      r: 'Detectar: revisas el bolso para confirmar ambos objetos. Evaluar: el power bank puede ir en cabina si cumple (hasta 100 Wh, máximo 2 por persona); el spray de defensa no puede viajar en ningún equipaje. Resolver: permites el power bank y ofreces el abandono voluntario del spray. Comunicar y registrar: explicas el motivo en una frase, con cortesía y firmeza, y registras según el procedimiento.' }
+  }
+};

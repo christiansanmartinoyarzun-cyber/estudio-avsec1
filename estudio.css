@@ -345,3 +345,49 @@ html.dark .opciones .opcion[aria-pressed="true"] { border-color: var(--senal); b
   .tabla-caja table { font-size: .88rem; }
   .tabla-caja th, .tabla-caja td { padding: .5rem .55rem; }
 }
+
+/* Etapas del recorrido */
+.etapa-sup { font-size: .9rem; font-weight: 700; color: var(--azul-medio); }
+html.dark .etapa-sup { color: var(--senal); }
+.etapas h3 { font-size: 1.12rem; }
+.etapa-datos { margin: .7rem 0 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem .9rem; font-size: .92rem; }
+.etapa-datos dt { color: var(--suave); font-size: .82rem; }
+.etapa-datos dd { margin: 0; font-weight: 700; }
+@media (max-width: 520px) { .etapa-datos { grid-template-columns: 1fr; } }
+
+/* Guía de cada sección */
+.guia { margin-top: 1.1rem; background: var(--superficie); border: 1px solid var(--borde); border-left: 6px solid var(--azul-medio); border-radius: 14px; }
+html.dark .guia { border-left-color: var(--senal); }
+.guia > summary { cursor: pointer; padding: .9rem 1.1rem; display: flex; flex-direction: column; gap: .1rem; list-style: none; }
+.guia > summary::-webkit-details-marker { display: none; }
+.guia > summary::after { content: 'Ocultar guía'; font-size: .85rem; font-weight: 700; color: var(--azul-medio); margin-top: .2rem; }
+html.dark .guia > summary::after { color: var(--senal); }
+.guia:not([open]) > summary::after { content: 'Ver la guía'; }
+.guia-etapa { font-size: .88rem; font-weight: 700; color: var(--suave); }
+.guia-tit { font-size: 1.12rem; font-weight: 700; color: var(--titulo); }
+.guia-cuerpo { padding: 0 1.1rem 1rem; }
+.guia-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: .9rem; }
+.guia-grid h3 { font-size: 1rem; }
+.guia-grid ul { margin-top: .2rem; }
+.guia-logro { margin-top: .9rem; padding: .7rem .9rem; border-radius: 10px; background: var(--ok-bg); }
+.guia-meta { margin-top: .6rem; font-size: .88rem; color: var(--suave); }
+@media (max-width: 700px) { .guia-grid { grid-template-columns: 1fr; } }
+.paso-etapa { margin-top: 2rem; padding-top: 1.2rem; border-top: 1px solid var(--borde); }
+
+/* Módulos agrupados por bloque */
+.bloque-mod + .bloque-mod { margin-top: 1.4rem; }
+.bloque-mod h3 { font-size: 1.05rem; color: var(--titulo); }
+.bloque-desc { color: var(--suave); font-size: .95rem; margin-bottom: .6rem !important; }
+
+/* Propósito y caso en cada módulo */
+.proposito { margin-top: 1.4rem; }
+.proposito h2 { margin-top: 0; }
+.proposito h3 { margin-top: .9rem; }
+.caso { margin-top: 1.6rem; padding: 1.1rem 1.2rem; background: var(--superficie); border: 2px solid var(--tinta); border-radius: 16px; }
+html.dark .caso { border-color: var(--senal); }
+.caso h2 { margin-top: 0; }
+.caso-indic { font-size: .92rem; color: var(--suave); }
+.caso details { margin-top: .7rem; }
+.caso summary { cursor: pointer; font-weight: 700; color: var(--azul-medio); padding: .4rem 0; }
+html.dark .caso summary { color: var(--senal); }
+.caso details p { margin-top: .4rem; padding: .8rem 1rem; border-radius: 10px; background: var(--ok-bg); }
